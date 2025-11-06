@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
 
         roteiro = await generateLongContent(buildRoteiroPrompt(input));
 
+        // Rate limiting: aguarda 2s antes da próxima chamada
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         sendEvent(controller, {
           progress: 15,
           message: 'Roteiro estruturado criado! Validando...',
@@ -72,6 +75,9 @@ export async function POST(request: NextRequest) {
 
         trilha = await generateContent(buildTrilhaPrompt(roteiro, input));
 
+        // Rate limiting: aguarda 2s antes da próxima chamada
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         sendEvent(controller, {
           progress: 25,
           message: 'Trilha sonora definida!',
@@ -87,6 +93,9 @@ export async function POST(request: NextRequest) {
 
         const hook = await generateLongContent(buildTextoNarradoHookPrompt(roteiro, input));
         textoNarrado += `${input.title.toUpperCase()} - NARRATED TEXT\nEnglish Version\n================================================\n\n${hook}\n\n`;
+
+        // Rate limiting: aguarda 2s antes da próxima chamada
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         sendEvent(controller, {
           progress: 35,
@@ -122,6 +131,9 @@ export async function POST(request: NextRequest) {
 
           textoNarrado += `${atoContent}\n\n`;
 
+          // Rate limiting: aguarda 2s entre atos
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
           sendEvent(controller, {
             progress: act.progress + 2,
             message: `ATO ${act.num} concluído (${countWords(atoContent)} palavras)`,
@@ -138,6 +150,9 @@ export async function POST(request: NextRequest) {
 
         const conclusao = await generateLongContent(buildTextoNarradoConclusaoPrompt(roteiro));
         textoNarrado += conclusao;
+
+        // Rate limiting: aguarda 2s antes da próxima chamada
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         sendEvent(controller, {
           progress: 88,
@@ -165,6 +180,9 @@ export async function POST(request: NextRequest) {
         });
 
         personagens = await generateLongContent(buildPersonagensPrompt(roteiro, input));
+
+        // Rate limiting: aguarda 2s antes da próxima chamada
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         sendEvent(controller, {
           progress: 95,
