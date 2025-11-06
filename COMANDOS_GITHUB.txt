@@ -1,0 +1,135 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                    🚀 COMANDOS PRONTOS PARA GITHUB                            ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+✅ JÁ FEITO:
+- Git inicializado
+- Commit inicial criado (24 arquivos, 9554 linhas de código)
+- .env.local protegido (não será enviado ao GitHub)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 1: CRIAR REPOSITÓRIO NO GITHUB (1 MINUTO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Acesse: https://github.com/new
+
+2. Preencha:
+   Nome: gerador-roteiros-biblicos
+   Descrição: 🎬 Gerador de roteiros profissionais para documentários bíblicos usando IA
+   Público: ✅ Sim (ou Privado se preferir)
+
+3. ❌ NÃO marque nenhuma opção (README, .gitignore, license)
+
+4. Clique: "Create repository"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 2: EXECUTAR ESTES COMANDOS (30 SEGUNDOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IMPORTANTE: Depois de criar o repo, o GitHub mostrará seu username na URL.
+Substitua "SEU_GITHUB_USERNAME" abaixo pelo username que aparecer!
+
+Copie e cole TODOS os comandos de uma vez:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+cd "c:\Users\tharc\Videos\GERADOR PROFISSIONAL DE ROTEIROS"
+
+git remote add origin https://github.com/SEU_GITHUB_USERNAME/gerador-roteiros-biblicos.git
+
+git branch -M main
+
+git push -u origin main
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 SE PEDIR SENHA:
+Não use sua senha do GitHub! Use um Personal Access Token:
+
+1. Gere o token: https://github.com/settings/tokens/new
+2. Nome: "Gerador Roteiros"
+3. Marque: [x] repo
+4. Clique: "Generate token"
+5. Copie o token (começa com ghp_...)
+6. Cole no prompt de senha do Git
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASSO 3: DEPLOY NA VERCEL (2 MINUTOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Após fazer push no GitHub:
+
+1. Acesse: https://vercel.com/new
+
+2. Login com GitHub
+
+3. Clique em "Import" no seu repositório "gerador-roteiros-biblicos"
+
+4. Configure:
+   Framework Preset: Next.js ✅ (detectado automaticamente)
+   Root Directory: ./ ✅
+   Build Command: npm run build ✅
+
+5. ADICIONE VARIÁVEL DE AMBIENTE:
+   Clique em "Environment Variables"
+
+   Name: GEMINI_API_KEY
+   Value: [COLE SUA CHAVE DA API GEMINI AQUI]
+
+   (Obter chave: https://makersuite.google.com/app/apikey)
+
+6. Clique: "Deploy"
+
+⏳ Aguarde 2-3 minutos...
+
+✅ PRONTO! Seu app estará no ar em:
+   https://gerador-roteiros-biblicos.vercel.app
+   (ou similar)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 RESUMO RÁPIDO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. github.com/new → Criar repo "gerador-roteiros-biblicos"
+2. Executar os 4 comandos git acima (substituir SEU_GITHUB_USERNAME)
+3. vercel.com/new → Import repo → Adicionar GEMINI_API_KEY → Deploy
+4. Compartilhar o link! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔄 ATUALIZAÇÕES FUTURAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para atualizar o código no futuro:
+
+
+git add .
+git commit -m "Descrição da mudança"
+git push
+
+
+A Vercel fará deploy automático! ⚡
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ PROBLEMAS?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"remote origin already exists"
+→ git remote remove origin
+→ Depois execute o comando add origin novamente
+
+"Authentication failed"
+→ Use Personal Access Token (link acima)
+
+Erro no deploy Vercel
+→ Verifique se adicionou GEMINI_API_KEY nas env vars
+→ Veja logs em: Vercel Dashboard → Deployments
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📧 Seu email configurado: tharcisionardoto@gmail.com
+📦 Arquivos commitados: 24 arquivos (9,554 linhas)
+🔒 Segurança: .env.local NÃO será enviado ao GitHub ✅
+
+Tudo pronto! Execute os passos acima e seu app estará no ar! 🎉
