@@ -1,0 +1,139 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                   🎬 GERADOR DE ROTEIROS BÍBLICOS - PRONTO!                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+✅ TUDO INSTALADO E CONFIGURADO!
+
+Seu app web está 99% pronto. Falta apenas 1 passo:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 PASSO FINAL (2 minutos):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. OBTER CHAVE DA API GEMINI (GRÁTIS):
+
+   → Acesse: https://makersuite.google.com/app/apikey
+   → Faça login com sua conta Google
+   → Clique em "Get API Key" ou "Create API Key"
+   → Copie a chave gerada (começa com "AI...")
+
+2. COLAR A CHAVE NO ARQUIVO .env.local:
+
+   → Abra o arquivo: .env.local (nesta pasta)
+   → Substitua "COLE_SUA_CHAVE_AQUI" pela chave que você copiou
+   → Salve o arquivo
+
+3. INICIAR O APP:
+
+   → Abra o terminal nesta pasta
+   → Execute: npm run dev
+   → Aguarde abrir automaticamente ou acesse: http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 COMO USAR O APP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Preencha o formulário:
+   • Título do vídeo
+   • Sinopse (2-3 parágrafos)
+   • Base de conhecimento (opcional)
+
+2. Clique em "Gerar Roteiro Completo"
+
+3. Aguarde 5-10 minutos (acompanhe o progresso em tempo real)
+
+4. Baixe os arquivos:
+   • Download completo (.zip) ou
+   • Download individual de cada arquivo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 ARQUIVOS GERADOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ 01_Roteiro_Estruturado.txt (Português)
+  → HOOK + 6 ATOS + CONCLUSÃO
+  → Estrutura completa do documentário
+
+✓ 02_Trilha_Sonora.txt (PT/EN)
+  → Direção musical para cada seção
+  → Keywords para buscar músicas
+
+✓ 03_Texto_Narrado.txt (Inglês)
+  → Mínimo 8,500 palavras
+  → Texto fluído para narração
+
+✓ 04_Personagens_Descricoes.txt (Inglês)
+  → Descrições para IA de imagens
+  → Formato otimizado para Midjourney/DALL-E
+
+✓ 05_Titulo_Descricao.txt (Português)
+  → 5 opções de títulos para YouTube
+  → Descrição completa com timestamps
+  → 2 ideias de thumbnail
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 COMANDOS ÚTEIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+npm run dev      → Iniciar em modo desenvolvimento
+npm run build    → Build para produção
+npm start        → Rodar versão de produção
+npm run lint     → Verificar código
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ PROBLEMAS COMUNS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ "GEMINI_API_KEY não está definida"
+   → Verifique se você editou o arquivo .env.local
+   → Certifique-se de que salvou o arquivo após colar a chave
+
+❌ Porta 3000 já está em uso
+   → Execute: npm run dev -- -p 3001
+   → Isso usará a porta 3001 ao invés de 3000
+
+❌ Erro ao gerar roteiro
+   → Verifique sua conexão com a internet
+   → Certifique-se de que a chave da API está correta
+   → Tente gerar novamente (às vezes a API tem timeout)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔄 MIGRAÇÃO FUTURA PARA CLAUDE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quando quiser trocar para Claude API (melhor qualidade):
+
+1. npm install @anthropic-ai/sdk
+2. Adicionar ANTHROPIC_API_KEY no .env.local
+3. Modificar src/lib/gemini.ts para usar Claude
+
+Documentação completa: README.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 ESTRUTURA DO PROJETO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/
+├── app/
+│   ├── page.tsx                  ← Página principal
+│   ├── api/generate/route.ts     ← API de geração
+│   └── layout.tsx
+├── components/
+│   ├── InputForm.tsx             ← Formulário
+│   ├── ProgressBar.tsx           ← Barra de progresso
+│   ├── FilePreview.tsx           ← Preview
+│   └── DownloadButtons.tsx       ← Downloads
+├── lib/
+│   ├── gemini.ts                 ← Config Gemini API
+│   ├── prompts.ts                ← Templates (baseados nas instruções)
+│   └── validators.ts             ← Validações
+└── types/
+    └── index.ts                  ← Types TypeScript
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ PRONTO! Agora é só configurar a API key e começar a gerar roteiros!
+
+Dúvidas? Leia o README.md para instruções detalhadas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
