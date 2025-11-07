@@ -4,9 +4,11 @@ interface ProgressBarProps {
   progress: number;
   message: string;
   currentFile?: string;
+  elapsedTime?: number;
+  formatElapsedTime?: (seconds: number) => string;
 }
 
-export default function ProgressBar({ progress, message, currentFile }: ProgressBarProps) {
+export default function ProgressBar({ progress, message, currentFile, elapsedTime = 0, formatElapsedTime }: ProgressBarProps) {
   const fileNames: Record<string, string> = {
     roteiro: '01_Roteiro_Estruturado.txt',
     trilha: '02_Trilha_Sonora.txt',
@@ -34,6 +36,19 @@ export default function ProgressBar({ progress, message, currentFile }: Progress
           <div className="w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
         </div>
       </div>
+
+      {/* Timer Display */}
+      {formatElapsedTime && elapsedTime > 0 && progress < 100 && (
+        <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+          <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+            <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2"/>
+          </svg>
+          <span className="text-lg font-semibold text-primary">
+            {formatElapsedTime(elapsedTime)}
+          </span>
+        </div>
+      )}
 
       <p className="text-sm text-gray-600 dark:text-gray-400 animate-pulse">
         {message}

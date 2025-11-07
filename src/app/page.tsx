@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputForm from '@/components/InputForm';
 import ProgressBar from '@/components/ProgressBar';
 import FilePreview from '@/components/FilePreview';
@@ -14,6 +14,47 @@ export default function Home() {
   const [generatedScripts, setGeneratedScripts] = useState<GeneratedScript | null>(null);
   const [currentInput, setCurrentInput] = useState<ScriptInput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Limpar timer quando componente desmontar
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
+
+  // Função para formatar tempo decorrido
+  const formatElapsedTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Função para iniciar o timer
+  const startTimer = () => {
+    const start = Date.now();
+    setStartTime(start);
+    setElapsedTime(0);
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setElapsedTime(elapsed);
+    }, 1000);
+
+    setTimerInterval(interval);
+  };
+
+  // Função para parar o timer
+  const stopTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+  };
 
   const handleGenerate = async (input: ScriptInput) => {
     setIsGenerating(true);
@@ -21,6 +62,9 @@ export default function Home() {
     setGeneratedScripts(null);
     setCurrentInput(input);
     setError(null);
+
+    // Iniciar timer
+    startTimer();
 
     try {
       const response = await fetch('/api/generate', {
@@ -57,13 +101,19 @@ export default function Home() {
             if (data.error) {
               setError(data.message);
               setIsGenerating(false);
+              stopTimer();
               return;
             }
 
             if (data.complete) {
               setGeneratedScripts(data.result);
-              setProgress({ progress: 100, message: '✓ Concluído!' });
+              const totalTime = Math.floor((Date.now() - startTime) / 1000);
+              const timeMessage = totalTime >= 60
+                ? `${Math.floor(totalTime / 60)} minuto${Math.floor(totalTime / 60) !== 1 ? 's' : ''} e ${totalTime % 60} segundo${totalTime % 60 !== 1 ? 's' : ''}`
+                : `${totalTime} segundo${totalTime !== 1 ? 's' : ''}`;
+              setProgress({ progress: 100, message: `✓ Concluído em ${timeMessage}!` });
               setIsGenerating(false);
+              stopTimer();
             } else {
               setProgress({
                 progress: data.progress,
@@ -78,6 +128,7 @@ export default function Home() {
       console.error('Erro:', err);
       setError(err.message || 'Erro desconhecido ao gerar roteiro');
       setIsGenerating(false);
+      stopTimer();
     }
   };
 
@@ -158,6 +209,8 @@ export default function Home() {
               progress={progress.progress}
               message={progress.message}
               currentFile={progress.currentFile}
+              elapsedTime={elapsedTime}
+              formatElapsedTime={formatElapsedTime}
             />
           </div>
         )}
