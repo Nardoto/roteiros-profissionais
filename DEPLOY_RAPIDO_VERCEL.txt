@@ -1,0 +1,365 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║                  🚀 DEPLOY NA VERCEL - PASSO A PASSO                         ║
+║                         (5 MINUTOS NO TOTAL)                                  ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+✅ Repositório GitHub: https://github.com/Nardoto/roteiros-profissionais
+✅ Código atualizado: 6 commits enviados
+✅ Pronto para deploy!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                            🎯 PASSO 1: ACESSAR VERCEL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👉 CLIQUE AQUI: https://vercel.com/new
+
+1. Se não tem conta:
+   → Clique "Sign Up"
+   → Escolha "Continue with GitHub"
+   → Autorize a Vercel
+
+2. Se já tem conta:
+   → Clique "Sign In"
+   → Login com GitHub
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                       🎯 PASSO 2: IMPORTAR REPOSITÓRIO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Na página da Vercel:
+
+1. Procure por: "Nardoto/roteiros-profissionais"
+
+2. Clique no botão "Import" ao lado do repositório
+
+   Se não aparecer:
+   → Clique em "Adjust GitHub App Permissions"
+   → Dê permissão para acessar o repositório
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    🎯 PASSO 3: CONFIGURAR PROJETO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Você verá uma tela de configuração:
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  Configure Project                                                         │
+│                                                                            │
+│  Project Name:  roteiros-profissionais              (pode deixar assim)   │
+│                                                                            │
+│  Framework Preset:  Next.js                         ✅ (detectado auto)   │
+│                                                                            │
+│  Root Directory:  ./                                ✅ (deixe assim)      │
+│                                                                            │
+│  Build Command:  npm run build                      ✅ (deixe assim)      │
+│                                                                            │
+│  Output Directory:  .next                           ✅ (deixe assim)      │
+│                                                                            │
+│  Install Command:  npm install                      ✅ (deixe assim)      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+⚠️ NÃO CLIQUE EM DEPLOY AINDA!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+              🎯 PASSO 4: ADICIONAR GEMINI_API_KEY (CRÍTICO!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️⚠️⚠️ SEM ISSO O APP NÃO VAI FUNCIONAR! ⚠️⚠️⚠️
+
+Na mesma página de configuração:
+
+1. Procure a seção "Environment Variables"
+
+2. Clique para expandir
+
+3. Preencha:
+
+   ┌─────────────────────────────────────────────────────────────────────────┐
+   │                                                                         │
+   │  NAME (chave):     GEMINI_API_KEY                                       │
+   │                                                                         │
+   │  VALUE (valor):    [COLE SUA CHAVE AQUI]                               │
+   │                                                                         │
+   │  Environments:     ✅ Production                                        │
+   │                    ✅ Preview                                           │
+   │                    ✅ Development                                       │
+   │                                                                         │
+   └─────────────────────────────────────────────────────────────────────────┘
+
+4. Clique no botão "Add" para adicionar a variável
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    🔑 OBTER CHAVE GEMINI (SE NÃO TEM)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se você ainda não tem a chave da API Gemini:
+
+1. 👉 Acesse: https://makersuite.google.com/app/apikey
+
+2. Faça login com sua conta Google
+
+3. Clique em "Get API Key" ou "Create API Key"
+
+4. A chave será gerada (começa com "AI...")
+
+5. Clique em "Copy" para copiar
+
+6. Cole no campo VALUE da Vercel (passo 4 acima)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                        🎯 PASSO 5: FAZER DEPLOY!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Verifique se GEMINI_API_KEY está adicionada ✅
+
+2. Clique no grande botão azul: "Deploy"
+
+3. Aguarde 2-3 minutos...
+
+   Você verá:
+   ⏳ Building...
+   ⏳ Checking Build Output...
+   ⏳ Deploying...
+
+4. 🎉 Quando terminar, você verá:
+
+   ╔═════════════════════════════════════════════════════════════════════════╗
+   ║                                                                         ║
+   ║                    🎊 Congratulations!                                  ║
+   ║                                                                         ║
+   ║              Your project has been deployed!                            ║
+   ║                                                                         ║
+   ║      🌐 https://roteiros-profissionais.vercel.app                       ║
+   ║                                                                         ║
+   ╚═════════════════════════════════════════════════════════════════════════╝
+
+5. Clique no link para abrir seu app! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                        ✅ PASSO 6: TESTAR O APP
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. App deve abrir mostrando a interface
+
+2. Faça um teste rápido:
+
+   Título: A Arca de Noé - Mito ou Realidade?
+
+   Sinopse:
+   Explore a história bíblica do dilúvio sob múltiplas perspectivas:
+   arqueológica, histórica e teológica. Analisamos paralelos com
+   outras culturas antigas.
+
+3. Clique "Gerar Roteiro Completo"
+
+4. Deve aparecer:
+   ✅ Barra de progresso
+   ✅ Mensagens atualizando em tempo real
+   ✅ Após 5-10 minutos: 5 arquivos gerados!
+
+Se tudo funcionar: 🎉 SUCESSO! Seu app está no ar!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+              🌐 PASSO 7: CONFIGURAR DOMÍNIO CUSTOM (OPCIONAL)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se quiser usar roteiros.nardoto.com.br ao invés de .vercel.app:
+
+1. Na Vercel, clique no seu projeto
+
+2. Vá em "Settings" (⚙️)
+
+3. No menu lateral, clique em "Domains"
+
+4. No campo "Add Domain", digite:
+
+   roteiros.nardoto.com.br
+
+5. Clique "Add"
+
+6. A Vercel vai mostrar:
+
+   ⚠️ Invalid Configuration
+
+   Isso é NORMAL! Mostrará os registros DNS necessários:
+
+   ┌─────────────────────────────────────────────────────────────────────────┐
+   │  Type:  CNAME                                                           │
+   │  Name:  roteiros                                                        │
+   │  Value: cname.vercel-dns.com                                            │
+   └─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                  🎯 PASSO 8: CONFIGURAR DNS (PARA DOMÍNIO CUSTOM)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Onde você gerencia nardoto.com.br (Registro.br, Cloudflare, etc):
+
+1. Acesse o painel DNS
+
+2. Adicione um registro CNAME:
+
+   Tipo: CNAME
+   Nome: roteiros
+   Valor: cname.vercel-dns.com
+   TTL: 3600 (ou padrão)
+
+3. Salve
+
+4. Aguarde 5-30 minutos (propagação DNS)
+
+5. Volte na Vercel → Settings → Domains
+
+   Status mudará para: ✅ Valid
+
+6. PRONTO! Seu app estará em:
+
+   🌐 https://roteiros.nardoto.com.br
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                            📊 SEUS LINKS FINAIS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 App Online:
+   https://roteiros-profissionais.vercel.app
+   (ou https://roteiros.nardoto.com.br após configurar DNS)
+
+💻 Código GitHub:
+   https://github.com/Nardoto/roteiros-profissionais
+
+📊 Dashboard Vercel:
+   https://vercel.com/dashboard
+
+🔑 Gemini API Keys:
+   https://makersuite.google.com/app/apikey
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                        🔄 ATUALIZAÇÕES FUTURAS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para atualizar o app no futuro:
+
+1. Faça mudanças no código localmente
+
+2. Commit e push:
+
+   git add .
+   git commit -m "Descrição da mudança"
+   git push
+
+3. Vercel faz deploy AUTOMÁTICO! ⚡
+
+   Você receberá email quando terminar
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                          ❓ PROBLEMAS COMUNS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ "Build failed"
+   → Veja logs na Vercel
+   → Verifique se GEMINI_API_KEY foi adicionada
+   → Settings → Environment Variables
+
+❌ "API not working" / "GEMINI_API_KEY not defined"
+   → Settings → Environment Variables
+   → Verifique se a key está lá
+   → Redeploy: Deployments → ⋯ → Redeploy
+
+❌ App abre mas dá erro ao gerar roteiro
+   → Abra Console do browser (F12)
+   → Veja erro específico
+   → Verifique se GEMINI_API_KEY é válida
+
+❌ Domínio custom não funciona
+   → Aguarde mais tempo (até 1h)
+   → Verifique CNAME no DNS
+   → Use https://dnschecker.org para testar
+
+❌ "Too Many Requests"
+   → Gemini tem limite 60 req/min (grátis)
+   → Aguarde 1 minuto e tente novamente
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                            📱 COMPARTILHAR
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Após o deploy, compartilhe:
+
+🌐 App: https://roteiros-profissionais.vercel.app
+💻 Código: https://github.com/Nardoto/roteiros-profissionais
+📖 README: https://github.com/Nardoto/roteiros-profissionais#readme
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                            ✅ CHECKLIST
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Antes de considerar concluído:
+
+☐ Acessou Vercel.com
+☐ Login com GitHub feito
+☐ Repositório importado
+☐ GEMINI_API_KEY adicionada
+☐ Deploy concluído
+☐ App abre no navegador
+☐ Teste de geração funcionou
+☐ 5 arquivos foram gerados
+☐ Download funcionou
+☐ (Opcional) Domínio custom configurado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                          🎉 VOCÊ CONSEGUIU!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Seu app web fullstack está no ar! 🚀
+
+✅ Código versionado no GitHub
+✅ Deploy automático configurado
+✅ App acessível globalmente 24/7
+✅ HTTPS + CDN + Performance otimizada
+✅ Grátis!
+
+De app local para app GLOBAL em 5 minutos! 🌍
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ Hora: ~11:30 AM
+🎯 Status: Pronto para deploy!
+📍 Próximo passo: Acesse https://vercel.com/new
+
+👉 BORA LÁ! CLIQUE NO LINK ACIMA E SIGA OS PASSOS! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

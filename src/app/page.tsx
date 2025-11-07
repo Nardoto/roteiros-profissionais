@@ -5,6 +5,7 @@ import InputForm from '@/components/InputForm';
 import ProgressBar from '@/components/ProgressBar';
 import FilePreview from '@/components/FilePreview';
 import DownloadButtons from '@/components/DownloadButtons';
+import Footer from '@/components/Footer';
 import { ScriptInput, GeneratedScript, ProgressUpdate } from '@/types';
 import { BookOpen, Sparkles } from 'lucide-react';
 
@@ -269,11 +270,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="mt-16 text-center text-gray-500 dark:text-gray-500 text-sm">
-          <p>Gerador de Roteiros Bíblicos • Powered by Gemini AI</p>
-          <p className="mt-1">Criado para produção profissional de documentários</p>
-        </footer>
+        <Footer />
       </div>
     </main>
   );

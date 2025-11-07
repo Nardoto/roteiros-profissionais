@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
 
         roteiro = await generateWithRotation(buildRoteiroPrompt(input), geminiKeys);
 
-        // Rate limiting: aguarda 2s antes da próxima chamada
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // Rate limiting: aguarda 3s antes da próxima chamada (12 req = 36s, bem abaixo de 60s)
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         sendEvent(controller, {
           progress: 15,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         trilha = await generateWithRotation(buildTrilhaPrompt(roteiro, input), geminiKeys);
 
         // Rate limiting: aguarda 2s antes da próxima chamada
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         sendEvent(controller, {
           progress: 25,
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         textoNarrado += `${input.title.toUpperCase()} - NARRATED TEXT\nEnglish Version\n================================================\n\n${hook}\n\n`;
 
         // Rate limiting: aguarda 2s antes da próxima chamada
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         sendEvent(controller, {
           progress: 35,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
           textoNarrado += `${atoContent}\n\n`;
 
           // Rate limiting: aguarda 2s entre atos
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 3000));
 
           sendEvent(controller, {
             progress: act.progress + 2,
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         textoNarrado += conclusao;
 
         // Rate limiting: aguarda 2s antes da próxima chamada
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         sendEvent(controller, {
           progress: 88,
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
         personagens = await generateWithRotation(buildPersonagensPrompt(roteiro, input), geminiKeys);
 
         // Rate limiting: aguarda 2s antes da próxima chamada
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         sendEvent(controller, {
           progress: 95,

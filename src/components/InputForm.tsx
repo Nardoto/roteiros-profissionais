@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ScriptInput, ApiKeys } from '@/types';
+import { ScriptInput, ApiKeys, ApiSelection, ScriptMode } from '@/types';
 import { Sparkles } from 'lucide-react';
 import ApiKeyManager from './ApiKeyManager';
+import ApiSelector from './ApiSelector';
+import ScriptModeSelector from './ScriptModeSelector';
+import CostEstimator from './CostEstimator';
 
 interface InputFormProps {
   onSubmit: (input: ScriptInput) => void;
@@ -14,6 +17,8 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState('');
+  const [scriptMode, setScriptMode] = useState<ScriptMode>('documentary');
+  const [selectedApi, setSelectedApi] = useState<ApiSelection | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
     gemini: [''], // Inicia com 1 campo vazio
     openai: undefined,
@@ -35,10 +40,18 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       return;
     }
 
+    // Validar que uma API foi selecionada
+    if (!selectedApi) {
+      alert('Por favor, selecione uma API para usar.');
+      return;
+    }
+
     onSubmit({
       title: title.trim(),
       synopsis: synopsis.trim(),
       knowledgeBase: knowledgeBase.trim() || undefined,
+      mode: scriptMode,
+      selectedApi: selectedApi,
       apiKeys: {
         gemini: validGeminiKeys,
         openai: apiKeys.openai?.trim() || undefined,
@@ -51,6 +64,20 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* API Key Manager */}
       <ApiKeyManager apiKeys={apiKeys} onChange={setApiKeys} />
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+
+      {/* Seletor de Modo */}
+      <ScriptModeSelector selectedMode={scriptMode} onChange={setScriptMode} />
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+
+      {/* Seletor de API */}
+      <ApiSelector
+        apiKeys={apiKeys}
+        selectedApi={selectedApi}
+        onChange={setSelectedApi}
+      />
 
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
 
@@ -109,6 +136,15 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
           Adicione fontes, versículos, evidências ou contexto adicional (opcional)
         </p>
       </div>
+
+      {/* Estimativa de Custo */}
+      {selectedApi && (title.trim() || synopsis.trim()) && (
+        <CostEstimator
+          selectedApi={selectedApi}
+          synopsisLength={synopsis.length}
+          knowledgeBaseLength={knowledgeBase.length}
+        />
+      )}
 
       {/* Botão Submit */}
       <button

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Key, Plus, X, Eye, EyeOff } from 'lucide-react';
+import { Key, Plus, X, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { ApiKeys } from '@/types';
 
 interface ApiKeyManagerProps {
@@ -11,6 +11,7 @@ interface ApiKeyManagerProps {
 
 export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps) {
   const [showKeys, setShowKeys] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Carregar API keys do localStorage ao montar
   useEffect(() => {
@@ -74,21 +75,40 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      {/* Header - Clicável para expandir/recolher */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      >
         <div className="flex items-center gap-2">
           <Key className="text-primary" size={20} />
-          <h3 className="text-lg font-semibold">API Keys</h3>
+          <h3 className="text-lg font-semibold">Configuração de API Keys</h3>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            ({apiKeys.gemini.filter(k => k.trim()).length} Gemini
+            {apiKeys.openai ? ', GPT' : ''}
+            {apiKeys.anthropic ? ', Claude' : ''})
+          </span>
         </div>
-        <button
-          onClick={() => setShowKeys(!showKeys)}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary flex items-center gap-1"
-        >
-          {showKeys ? <EyeOff size={16} /> : <Eye size={16} />}
-          {showKeys ? 'Ocultar' : 'Mostrar'}
-        </button>
-      </div>
+        <ChevronDown
+          size={20}
+          className={`text-gray-600 dark:text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {/* Conteúdo expansível */}
+      <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+        <div className="p-6 space-y-6">
+          {/* Botão de mostrar/ocultar keys */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowKeys(!showKeys)}
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary flex items-center gap-1"
+            >
+              {showKeys ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showKeys ? 'Ocultar chaves' : 'Mostrar chaves'}
+            </button>
+          </div>
 
       {/* Gemini APIs (múltiplas) */}
       <div className="space-y-3">
@@ -215,6 +235,8 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
           </div>
         </div>
       </details>
+        </div>
+      </div>
     </div>
   );
 }
