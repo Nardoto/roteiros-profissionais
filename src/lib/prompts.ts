@@ -281,7 +281,6 @@ ${template}
 ${important}
 `;
 }
-}
 
 export function buildTextoNarradoAtoPrompt(
   roteiro: string,
