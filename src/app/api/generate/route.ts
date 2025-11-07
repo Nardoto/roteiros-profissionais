@@ -34,15 +34,51 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Validar API keys
-  if (!input.apiKeys || !input.apiKeys.gemini || input.apiKeys.gemini.length === 0) {
+  // Validar que um provider foi selecionado
+  if (!input.selectedApi || !input.selectedApi.provider) {
     return new Response(
-      JSON.stringify({ error: 'Pelo menos uma API Key do Gemini é obrigatória' }),
+      JSON.stringify({ error: 'Por favor, selecione um provider de IA' }),
       { status: 400 }
     );
   }
 
-  const geminiKeys = input.apiKeys.gemini;
+  // Extrair API keys do provider selecionado
+  const selectedProvider = input.selectedApi.provider;
+  let providerKeys: string[] = [];
+
+  // Providers com múltiplas keys (gratuitos)
+  if (['gemini', 'groq', 'cohere', 'huggingface'].includes(selectedProvider)) {
+    providerKeys = input.apiKeys[selectedProvider as 'gemini' | 'groq' | 'cohere' | 'huggingface'] || [];
+  }
+  // Providers com uma key (pagos)
+  else if (['openai', 'anthropic', 'mistral', 'together', 'perplexity'].includes(selectedProvider)) {
+    const singleKey = input.apiKeys[selectedProvider as 'openai' | 'anthropic' | 'mistral' | 'together' | 'perplexity'];
+    if (singleKey) {
+      providerKeys = [singleKey];
+    }
+  }
+
+  // Validar que há pelo menos uma API key
+  const validKeys = providerKeys.filter(k => k.trim().length > 0);
+  if (validKeys.length === 0) {
+    return new Response(
+      JSON.stringify({ error: `Nenhuma API Key válida encontrada para o provider ${input.selectedApi.label}` }),
+      { status: 400 }
+    );
+  }
+
+  console.log(`🔑 Usando ${validKeys.length} API key(s) do provider: ${input.selectedApi.label}`);
+
+  // IMPORTANTE: Por enquanto, apenas Gemini está implementado
+  // Outros providers precisarão de suas próprias implementações
+  if (selectedProvider !== 'gemini') {
+    return new Response(
+      JSON.stringify({ error: `Provider "${input.selectedApi.label}" ainda não está implementado. Por favor, use Google Gemini por enquanto.` }),
+      { status: 501 } // Not Implemented
+    );
+  }
+
+  const geminiKeys = validKeys;
 
   // Criar stream SSE para progresso em tempo real
   const stream = new ReadableStream({
@@ -70,6 +106,12 @@ export async function POST(request: NextRequest) {
           progress: 15,
           message: 'Roteiro estruturado criado! Validando...',
           currentFile: 'roteiro',
+          partialFile: {
+            type: 'roteiro',
+            content: roteiro,
+            generatedAt: new Date().toISOString(),
+            isComplete: true
+          }
         });
 
         if (!validateRoteiro(roteiro)) {
@@ -92,6 +134,12 @@ export async function POST(request: NextRequest) {
           progress: 25,
           message: 'Trilha sonora definida!',
           currentFile: 'trilha',
+          partialFile: {
+            type: 'trilha',
+            content: trilha,
+            generatedAt: new Date().toISOString(),
+            isComplete: true
+          }
         });
 
         // ETAPA 3: Gerar Texto Narrado (EN) - SEÇÃO POR SEÇÃO
@@ -149,6 +197,12 @@ export async function POST(request: NextRequest) {
             progress: act.progress + 2,
             message: `ATO ${act.num} concluído (${countWords(atoContent)} palavras)`,
             currentFile: 'textoNarrado',
+            partialFile: {
+              type: 'textoNarrado',
+              content: textoNarrado,
+              generatedAt: new Date().toISOString(),
+              isComplete: false // Ainda não terminou (falta conclusão)
+            }
           });
         }
 
@@ -169,6 +223,12 @@ export async function POST(request: NextRequest) {
           progress: 88,
           message: `Conclusão concluída (${countWords(conclusao)} palavras)`,
           currentFile: 'textoNarrado',
+          partialFile: {
+            type: 'textoNarrado',
+            content: textoNarrado,
+            generatedAt: new Date().toISOString(),
+            isComplete: true // Agora está completo
+          }
         });
 
         // Validar texto narrado
@@ -199,6 +259,12 @@ export async function POST(request: NextRequest) {
           progress: 95,
           message: 'Personagens descritos!',
           currentFile: 'personagens',
+          partialFile: {
+            type: 'personagens',
+            content: personagens,
+            generatedAt: new Date().toISOString(),
+            isComplete: true
+          }
         });
 
         // ETAPA 5: Gerar Títulos (PT)
@@ -214,6 +280,12 @@ export async function POST(request: NextRequest) {
           progress: 99,
           message: 'Títulos criados! Finalizando...',
           currentFile: 'titulo',
+          partialFile: {
+            type: 'titulo',
+            content: titulo,
+            generatedAt: new Date().toISOString(),
+            isComplete: true
+          }
         });
 
         // Extrair contagem por seção
@@ -233,12 +305,27 @@ export async function POST(request: NextRequest) {
           },
         };
 
+        // Aguardar um pouco antes do evento final para garantir que tudo foi processado
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // ⚠️ NÃO enviar 'result' completo aqui - é muito grande (~20k+ palavras) e corta o SSE
+        // O frontend já recebeu todos os arquivos via partialFile nos eventos anteriores
+        // Enviamos apenas estatísticas e o sinal de conclusão
         sendEvent(controller, {
           progress: 100,
           message: '✓ Roteiro completo gerado com sucesso!',
           complete: true,
-          result,
+          stats: {
+            totalWords: totalWords,
+            sectionWords: sectionCounts,
+            validated: totalWords >= 8500,
+          }
         });
+
+        console.log('✅ Geração concluída! Evento final enviado.');
+
+        // Garantir que o evento final seja enviado antes de fechar
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         controller.close();
       } catch (error: any) {

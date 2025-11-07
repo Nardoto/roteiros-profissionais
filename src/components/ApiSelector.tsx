@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Cpu } from 'lucide-react';
-import { ApiKeys, ApiSelection } from '@/types';
+import { ApiKeys, ApiSelection, AIProvider } from '@/types';
 
 interface ApiSelectorProps {
   apiKeys: ApiKeys;
@@ -11,74 +11,125 @@ interface ApiSelectorProps {
 }
 
 export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelectorProps) {
-  // Gerar lista de opções disponíveis
-  const getAvailableApis = (): ApiSelection[] => {
-    const options: ApiSelection[] = [];
+  // Gerar lista de PROVIDERS (empresas) disponíveis - não APIs individuais
+  const getAvailableProviders = (): ApiSelection[] => {
+    const providers: ApiSelection[] = [];
 
-    // Adicionar APIs do Gemini
-    apiKeys.gemini.forEach((key, index) => {
-      if (key.trim()) {
-        options.push({
-          provider: 'gemini',
-          index,
-          label: `Gemini #${index + 1}${key.length > 10 ? ` (${key.substring(0, 8)}...)` : ''}`
-        });
-      }
-    });
+    // === GRATUITOS ===
+    // Google Gemini
+    if (apiKeys.gemini.filter(k => k.trim()).length > 0) {
+      const count = apiKeys.gemini.filter(k => k.trim()).length;
+      providers.push({
+        provider: 'gemini',
+        label: `Google Gemini (${count} API${count > 1 ? 's' : ''})`
+      });
+    }
 
-    // Adicionar OpenAI se disponível
-    if (apiKeys.openai && apiKeys.openai.trim()) {
-      options.push({
+    // Groq
+    if (apiKeys.groq.filter(k => k.trim()).length > 0) {
+      const count = apiKeys.groq.filter(k => k.trim()).length;
+      providers.push({
+        provider: 'groq',
+        label: `Groq (${count} API${count > 1 ? 's' : ''})`
+      });
+    }
+
+    // Cohere
+    if (apiKeys.cohere.filter(k => k.trim()).length > 0) {
+      const count = apiKeys.cohere.filter(k => k.trim()).length;
+      providers.push({
+        provider: 'cohere',
+        label: `Cohere (${count} API${count > 1 ? 's' : ''})`
+      });
+    }
+
+    // Hugging Face
+    if (apiKeys.huggingface.filter(k => k.trim()).length > 0) {
+      const count = apiKeys.huggingface.filter(k => k.trim()).length;
+      providers.push({
+        provider: 'huggingface',
+        label: `Hugging Face (${count} API${count > 1 ? 's' : ''})`
+      });
+    }
+
+    // === PAGOS ===
+    // OpenAI
+    if (apiKeys.openai?.trim()) {
+      providers.push({
         provider: 'openai',
-        label: `GPT-4 (OpenAI)`
+        label: `OpenAI GPT-4`
       });
     }
 
-    // Adicionar Anthropic se disponível
-    if (apiKeys.anthropic && apiKeys.anthropic.trim()) {
-      options.push({
+    // Anthropic
+    if (apiKeys.anthropic?.trim()) {
+      providers.push({
         provider: 'anthropic',
-        label: `Claude (Anthropic)`
+        label: `Anthropic Claude`
       });
     }
 
-    return options;
+    // Mistral
+    if (apiKeys.mistral?.trim()) {
+      providers.push({
+        provider: 'mistral',
+        label: `Mistral AI`
+      });
+    }
+
+    // Together
+    if (apiKeys.together?.trim()) {
+      providers.push({
+        provider: 'together',
+        label: `Together AI`
+      });
+    }
+
+    // Perplexity
+    if (apiKeys.perplexity?.trim()) {
+      providers.push({
+        provider: 'perplexity',
+        label: `Perplexity AI`
+      });
+    }
+
+    return providers;
   };
 
-  const availableApis = getAvailableApis();
+  const availableProviders = getAvailableProviders();
 
   // Carregar última seleção do localStorage
   useEffect(() => {
-    const savedSelection = localStorage.getItem('lastApiSelection');
+    const savedSelection = localStorage.getItem('lastProviderSelection');
     if (savedSelection && !selectedApi) {
       try {
         const parsed: ApiSelection = JSON.parse(savedSelection);
-        // Verificar se a API ainda existe
-        const exists = availableApis.some(
-          api => api.provider === parsed.provider && api.index === parsed.index
+        // Verificar se o PROVIDER ainda está disponível
+        const exists = availableProviders.some(
+          p => p.provider === parsed.provider
         );
         if (exists) {
           onChange(parsed);
-        } else if (availableApis.length > 0) {
-          // Se não existe mais, selecionar a primeira disponível
-          onChange(availableApis[0]);
+        } else if (availableProviders.length > 0) {
+          // Se não existe mais, selecionar o primeiro disponível
+          onChange(availableProviders[0]);
         }
       } catch (e) {
-        console.error('Erro ao carregar última API selecionada:', e);
-        if (availableApis.length > 0) {
-          onChange(availableApis[0]);
+        console.error('Erro ao carregar último provider selecionado:', e);
+        if (availableProviders.length > 0) {
+          onChange(availableProviders[0]);
         }
       }
-    } else if (!selectedApi && availableApis.length > 0) {
-      // Se não há seleção e há APIs disponíveis, selecionar a primeira
-      onChange(availableApis[0]);
+    } else if (!selectedApi && availableProviders.length > 0) {
+      // Se não há seleção e há providers disponíveis, selecionar o primeiro
+      onChange(availableProviders[0]);
     }
   }, []);
 
   // Salvar no localStorage quando mudar
   useEffect(() => {
     if (selectedApi) {
-      localStorage.setItem('lastApiSelection', JSON.stringify(selectedApi));
+      localStorage.setItem('lastProviderSelection', JSON.stringify(selectedApi));
     }
   }, [selectedApi]);
 
@@ -87,7 +138,12 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelec
     onChange(parsed);
   };
 
-  if (availableApis.length === 0) {
+  // Verificar se é provider gratuito ou pago
+  const isFreeProvider = (provider: AIProvider): boolean => {
+    return ['gemini', 'groq', 'cohere', 'huggingface'].includes(provider);
+  };
+
+  if (availableProviders.length === 0) {
     return (
       <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
         <p className="text-sm text-yellow-800 dark:text-yellow-300">
@@ -99,39 +155,44 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelec
 
   return (
     <div className="space-y-2">
-      <label htmlFor="api-selector" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+      <label htmlFor="provider-selector" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
         <div className="flex items-center gap-2 mb-1">
           <Cpu size={16} className="text-primary" />
-          <span>Selecione a API para usar *</span>
+          <span>Selecione o Provider de IA *</span>
         </div>
       </label>
 
       <select
-        id="api-selector"
+        id="provider-selector"
         value={selectedApi ? JSON.stringify(selectedApi) : ''}
         onChange={(e) => handleChange(e.target.value)}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
         required
       >
-        {availableApis.map((api, index) => (
-          <option key={index} value={JSON.stringify(api)}>
-            {api.label}
-            {api.provider === 'gemini' ? ' (Gratuito)' : ' (Pago)'}
+        {availableProviders.map((provider, index) => (
+          <option key={index} value={JSON.stringify(provider)}>
+            {provider.label} {isFreeProvider(provider.provider) ? '(Gratuito)' : '(Pago)'}
           </option>
         ))}
       </select>
 
       <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
         <div className="text-xs text-blue-800 dark:text-blue-300">
-          <strong>ℹ️ Dica:</strong> A última API selecionada será lembrada para as próximas gerações.
+          <strong>ℹ️ Dica:</strong> Ao selecionar um provider, TODAS as APIs cadastradas dele serão usadas em rotação automática.
+          {selectedApi && isFreeProvider(selectedApi.provider) && (
+            <span> Providers gratuitos têm limites diários - use múltiplas APIs para aumentar o limite!</span>
+          )}
           {selectedApi?.provider === 'gemini' && (
-            <span> O Gemini é gratuito, mas tem limite de 16 roteiros/dia por API.</span>
+            <span> Gemini: ~16 roteiros/dia por API.</span>
+          )}
+          {selectedApi?.provider === 'groq' && (
+            <span> Groq: ultra-rápido, limite generoso.</span>
           )}
           {selectedApi?.provider === 'openai' && (
-            <span> GPT-4 é pago (~US$ 0.50 por roteiro).</span>
+            <span> OpenAI GPT-4: ~US$ 0.50/roteiro.</span>
           )}
           {selectedApi?.provider === 'anthropic' && (
-            <span> Claude é pago (~US$ 0.40 por roteiro).</span>
+            <span> Anthropic Claude: ~US$ 0.40/roteiro.</span>
           )}
         </div>
       </div>

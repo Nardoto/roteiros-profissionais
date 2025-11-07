@@ -5,14 +5,16 @@ import InputForm from '@/components/InputForm';
 import ProgressBar from '@/components/ProgressBar';
 import FilePreview from '@/components/FilePreview';
 import DownloadButtons from '@/components/DownloadButtons';
+import ProgressiveDownloads from '@/components/ProgressiveDownloads';
 import Footer from '@/components/Footer';
-import { ScriptInput, GeneratedScript, ProgressUpdate } from '@/types';
+import { ScriptInput, GeneratedScript, ProgressUpdate, PartialFile } from '@/types';
 import { BookOpen, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<ProgressUpdate>({ progress: 0, message: '' });
   const [generatedScripts, setGeneratedScripts] = useState<GeneratedScript | null>(null);
+  const [partialFiles, setPartialFiles] = useState<Record<string, PartialFile>>({});
   const [currentInput, setCurrentInput] = useState<ScriptInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<number>(0);
@@ -61,6 +63,7 @@ export default function Home() {
     setIsGenerating(true);
     setProgress({ progress: 0, message: 'Iniciando geração...' });
     setGeneratedScripts(null);
+    setPartialFiles({});
     setCurrentInput(input);
     setError(null);
 
@@ -108,7 +111,17 @@ export default function Home() {
             }
 
             if (data.complete) {
-              setGeneratedScripts(data.result);
+              // Construir o resultado final a partir dos partialFiles
+              const finalResult: GeneratedScript & { stats: any } = {
+                roteiro: partialFiles.roteiro?.content || '',
+                trilha: partialFiles.trilha?.content || '',
+                textoNarrado: partialFiles.textoNarrado?.content || '',
+                personagens: partialFiles.personagens?.content || '',
+                titulo: partialFiles.titulo?.content || '',
+                stats: data.stats || {}
+              };
+
+              setGeneratedScripts(finalResult);
               const totalTime = Math.floor((Date.now() - startTime) / 1000);
               const timeMessage = totalTime >= 60
                 ? `${Math.floor(totalTime / 60)} minuto${Math.floor(totalTime / 60) !== 1 ? 's' : ''} e ${totalTime % 60} segundo${totalTime % 60 !== 1 ? 's' : ''}`
@@ -122,6 +135,14 @@ export default function Home() {
                 message: data.message,
                 currentFile: data.currentFile,
               });
+
+              // Processar arquivo parcial se houver
+              if (data.partialFile) {
+                setPartialFiles(prev => ({
+                  ...prev,
+                  [data.partialFile.type]: data.partialFile
+                }));
+              }
             }
             } catch (parseError) {
               // Ignora erros de parsing de JSON incompleto (chunks cortados)
@@ -218,6 +239,13 @@ export default function Home() {
               elapsedTime={elapsedTime}
               formatElapsedTime={formatElapsedTime}
             />
+          </div>
+        )}
+
+        {/* Progressive Downloads */}
+        {currentInput && Object.keys(partialFiles).length > 0 && (
+          <div className="mt-8">
+            <ProgressiveDownloads partialFiles={partialFiles} title={currentInput.title} />
           </div>
         )}
 

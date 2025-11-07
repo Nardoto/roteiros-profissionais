@@ -1,17 +1,38 @@
+// Providers disponíveis
+export type AIProvider =
+  // Gratuitos
+  | 'gemini'      // Google Gemini (gratuito com limites)
+  | 'groq'        // Groq (gratuito, ultra rápido)
+  | 'cohere'      // Cohere (tier gratuito generoso)
+  | 'huggingface' // Hugging Face Inference (gratuito)
+  // Pagos
+  | 'openai'      // OpenAI GPT (pago)
+  | 'anthropic'   // Anthropic Claude (pago)
+  | 'mistral'     // Mistral AI (pago, barato)
+  | 'together'    // Together AI (pago)
+  | 'perplexity'; // Perplexity AI (pago)
+
 export interface ApiKeys {
-  gemini: string[];  // Múltiplas APIs do Gemini
-  openai?: string;   // API do GPT (opcional)
-  anthropic?: string; // API do Claude (opcional)
+  // Gratuitos (múltiplas chaves)
+  gemini: string[];
+  groq: string[];
+  cohere: string[];
+  huggingface: string[];
+  // Pagos (uma chave cada)
+  openai?: string;
+  anthropic?: string;
+  mistral?: string;
+  together?: string;
+  perplexity?: string;
 }
 
 // Tipo de modo de roteiro
 export type ScriptMode = 'documentary' | 'character';
 
-// Seleção de API para usar
+// Seleção de PROVIDER (empresa), não API específica
 export interface ApiSelection {
-  provider: 'gemini' | 'openai' | 'anthropic';
-  index?: number; // Para Gemini, qual das múltiplas keys
-  label: string; // Nome amigável (ex: "Gemini #1", "GPT-4", "Claude")
+  provider: AIProvider;
+  label: string; // Nome amigável (ex: "Google Gemini", "OpenAI GPT-4", "Anthropic Claude")
 }
 
 // Estimativa de custo

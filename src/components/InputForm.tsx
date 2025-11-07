@@ -20,9 +20,17 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [scriptMode, setScriptMode] = useState<ScriptMode>('documentary');
   const [selectedApi, setSelectedApi] = useState<ApiSelection | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
-    gemini: [''], // Inicia com 1 campo vazio
+    // Gratuitos
+    gemini: [''],
+    groq: [],
+    cohere: [],
+    huggingface: [],
+    // Pagos
     openai: undefined,
-    anthropic: undefined
+    anthropic: undefined,
+    mistral: undefined,
+    together: undefined,
+    perplexity: undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,18 +41,43 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       return;
     }
 
-    // Validar que pelo menos 1 API key do Gemini está preenchida
-    const validGeminiKeys = apiKeys.gemini.filter(key => key.trim().length > 0);
-    if (validGeminiKeys.length === 0) {
-      alert('Por favor, adicione pelo menos uma API Key do Google Gemini.');
+    // Validar que um provider foi selecionado
+    if (!selectedApi) {
+      alert('Por favor, selecione um provider de IA para usar.');
       return;
     }
 
-    // Validar que uma API foi selecionada
-    if (!selectedApi) {
-      alert('Por favor, selecione uma API para usar.');
+    // Validar que o provider selecionado tem API keys configuradas
+    const provider = selectedApi.provider;
+    let hasValidKeys = false;
+
+    if (['gemini', 'groq', 'cohere', 'huggingface'].includes(provider)) {
+      const keys = apiKeys[provider as 'gemini' | 'groq' | 'cohere' | 'huggingface'];
+      hasValidKeys = keys.filter(k => k.trim().length > 0).length > 0;
+    } else if (['openai', 'anthropic', 'mistral', 'together', 'perplexity'].includes(provider)) {
+      const key = apiKeys[provider as 'openai' | 'anthropic' | 'mistral' | 'together' | 'perplexity'];
+      hasValidKeys = !!key?.trim();
+    }
+
+    if (!hasValidKeys) {
+      alert(`Por favor, adicione pelo menos uma API Key para ${selectedApi.label}.`);
       return;
     }
+
+    // Limpar e enviar apenas as keys válidas
+    const cleanedApiKeys: any = {
+      gemini: apiKeys.gemini.filter(k => k.trim().length > 0),
+      groq: apiKeys.groq.filter(k => k.trim().length > 0),
+      cohere: apiKeys.cohere.filter(k => k.trim().length > 0),
+      huggingface: apiKeys.huggingface.filter(k => k.trim().length > 0),
+    };
+
+    // Adicionar keys pagas se existirem
+    if (apiKeys.openai?.trim()) cleanedApiKeys.openai = apiKeys.openai.trim();
+    if (apiKeys.anthropic?.trim()) cleanedApiKeys.anthropic = apiKeys.anthropic.trim();
+    if (apiKeys.mistral?.trim()) cleanedApiKeys.mistral = apiKeys.mistral.trim();
+    if (apiKeys.together?.trim()) cleanedApiKeys.together = apiKeys.together.trim();
+    if (apiKeys.perplexity?.trim()) cleanedApiKeys.perplexity = apiKeys.perplexity.trim();
 
     onSubmit({
       title: title.trim(),
@@ -52,11 +85,7 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       knowledgeBase: knowledgeBase.trim() || undefined,
       mode: scriptMode,
       selectedApi: selectedApi,
-      apiKeys: {
-        gemini: validGeminiKeys,
-        openai: apiKeys.openai?.trim() || undefined,
-        anthropic: apiKeys.anthropic?.trim() || undefined
-      }
+      apiKeys: cleanedApiKeys
     });
   };
 
