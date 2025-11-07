@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ScriptInput } from '@/types';
+import { ScriptInput, ApiKeys } from '@/types';
 import { Sparkles } from 'lucide-react';
+import ApiKeyManager from './ApiKeyManager';
 
 interface InputFormProps {
   onSubmit: (input: ScriptInput) => void;
@@ -13,6 +14,11 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState('');
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({
+    gemini: [''], // Inicia com 1 campo vazio
+    openai: undefined,
+    anthropic: undefined
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,15 +28,32 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       return;
     }
 
+    // Validar que pelo menos 1 API key do Gemini está preenchida
+    const validGeminiKeys = apiKeys.gemini.filter(key => key.trim().length > 0);
+    if (validGeminiKeys.length === 0) {
+      alert('Por favor, adicione pelo menos uma API Key do Google Gemini.');
+      return;
+    }
+
     onSubmit({
       title: title.trim(),
       synopsis: synopsis.trim(),
       knowledgeBase: knowledgeBase.trim() || undefined,
+      apiKeys: {
+        gemini: validGeminiKeys,
+        openai: apiKeys.openai?.trim() || undefined,
+        anthropic: apiKeys.anthropic?.trim() || undefined
+      }
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* API Key Manager */}
+      <ApiKeyManager apiKeys={apiKeys} onChange={setApiKeys} />
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+
       {/* Título */}
       <div>
         <label htmlFor="title" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">

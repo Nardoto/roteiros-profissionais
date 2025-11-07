@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { generateContent, generateLongContent } from '@/lib/gemini';
+import { generateWithRotation } from '@/lib/gemini';
 import {
   buildRoteiroPrompt,
   buildTrilhaPrompt,
@@ -34,6 +34,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validar API keys
+  if (!input.apiKeys || !input.apiKeys.gemini || input.apiKeys.gemini.length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'Pelo menos uma API Key do Gemini é obrigatória' }),
+      { status: 400 }
+    );
+  }
+
+  const geminiKeys = input.apiKeys.gemini;
+
   // Criar stream SSE para progresso em tempo real
   const stream = new ReadableStream({
     async start(controller) {
@@ -51,7 +61,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'roteiro',
         });
 
-        roteiro = await generateLongContent(buildRoteiroPrompt(input));
+        roteiro = await generateWithRotation(buildRoteiroPrompt(input), geminiKeys);
 
         // Rate limiting: aguarda 2s antes da próxima chamada
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -73,7 +83,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'trilha',
         });
 
-        trilha = await generateContent(buildTrilhaPrompt(roteiro, input));
+        trilha = await generateWithRotation(buildTrilhaPrompt(roteiro, input), geminiKeys);
 
         // Rate limiting: aguarda 2s antes da próxima chamada
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -91,7 +101,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'textoNarrado',
         });
 
-        const hook = await generateLongContent(buildTextoNarradoHookPrompt(roteiro, input));
+        const hook = await generateWithRotation(buildTextoNarradoHookPrompt(roteiro, input), geminiKeys);
         textoNarrado += `${input.title.toUpperCase()} - NARRATED TEXT\nEnglish Version\n================================================\n\n${hook}\n\n`;
 
         // Rate limiting: aguarda 2s antes da próxima chamada
@@ -125,8 +135,9 @@ export async function POST(request: NextRequest) {
           const atoMatch = roteiro.match(atoRegex);
           const atoTitle = atoMatch ? atoMatch[1].trim() : `Act ${act.name}`;
 
-          const atoContent = await generateLongContent(
-            buildTextoNarradoAtoPrompt(roteiro, act.num, atoTitle, act.timestamps)
+          const atoContent = await generateWithRotation(
+            buildTextoNarradoAtoPrompt(roteiro, act.num, atoTitle, act.timestamps),
+            geminiKeys
           );
 
           textoNarrado += `${atoContent}\n\n`;
@@ -148,7 +159,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'textoNarrado',
         });
 
-        const conclusao = await generateLongContent(buildTextoNarradoConclusaoPrompt(roteiro));
+        const conclusao = await generateWithRotation(buildTextoNarradoConclusaoPrompt(roteiro), geminiKeys);
         textoNarrado += conclusao;
 
         // Rate limiting: aguarda 2s antes da próxima chamada
@@ -179,7 +190,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'personagens',
         });
 
-        personagens = await generateLongContent(buildPersonagensPrompt(roteiro, input));
+        personagens = await generateWithRotation(buildPersonagensPrompt(roteiro, input), geminiKeys);
 
         // Rate limiting: aguarda 2s antes da próxima chamada
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -197,7 +208,7 @@ export async function POST(request: NextRequest) {
           currentFile: 'titulo',
         });
 
-        titulo = await generateContent(buildTituloPrompt(roteiro, input));
+        titulo = await generateWithRotation(buildTituloPrompt(roteiro, input), geminiKeys);
 
         sendEvent(controller, {
           progress: 99,

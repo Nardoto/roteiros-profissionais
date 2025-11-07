@@ -1,16 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY não está definida no .env.local");
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 // Limite seguro para evitar erro 429 (aproximadamente 17k tokens)
 const MAX_CHARS_PER_CHUNK = 25000;
 
-export async function generateContent(prompt: string): Promise<string> {
+export async function generateContent(prompt: string, apiKey: string): Promise<string> {
   try {
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash-exp",
       generationConfig: {
@@ -45,10 +40,10 @@ export async function generateContent(prompt: string): Promise<string> {
   }
 }
 
-export async function generateLongContent(prompt: string, maxRetries = 3): Promise<string> {
+export async function generateLongContent(prompt: string, apiKey: string, maxRetries = 3): Promise<string> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await generateContent(prompt);
+      return await generateContent(prompt, apiKey);
     } catch (error: any) {
       if (i === maxRetries - 1) throw error;
       console.log(`Tentativa ${i + 1} falhou, tentando novamente...`);
@@ -56,6 +51,41 @@ export async function generateLongContent(prompt: string, maxRetries = 3): Promi
     }
   }
   throw new Error("Falha ao gerar conteúdo após múltiplas tentativas");
+}
+
+/**
+ * Gera conteúdo com rotação automática de API keys
+ * Tenta cada API key até conseguir gerar o conteúdo
+ */
+export async function generateWithRotation(prompt: string, apiKeys: string[]): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < apiKeys.length; i++) {
+    const apiKey = apiKeys[i];
+    console.log(`Tentando API key ${i + 1} de ${apiKeys.length}...`);
+
+    try {
+      const result = await generateLongContent(prompt, apiKey);
+      console.log(`✓ Sucesso com API key ${i + 1}`);
+      return result;
+    } catch (error: any) {
+      console.warn(`✗ API key ${i + 1} falhou:`, error.message);
+      lastError = error;
+
+      // Se for erro 429 e ainda há keys, tenta a próxima
+      if (error.message && error.message.includes('429') && i < apiKeys.length - 1) {
+        console.log(`Rotacionando para próxima API key...`);
+        continue;
+      }
+
+      // Se não for 429 ou é a última key, lança o erro
+      if (i === apiKeys.length - 1) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError || new Error("Falha ao gerar conteúdo com todas as API keys");
 }
 
 /**
@@ -110,12 +140,13 @@ function divideTextIntoChunks(text: string, maxChunkSize: number = MAX_CHARS_PER
 export async function generateContentWithChunks(
   basePrompt: string,
   content: string,
+  apiKeys: string[],
   onProgress?: (chunk: number, total: number) => void
 ): Promise<string> {
   // Se o conteúdo é pequeno, gera direto
   if (content.length <= MAX_CHARS_PER_CHUNK) {
     console.log('Conteúdo pequeno, gerando direto...');
-    return await generateLongContent(basePrompt);
+    return await generateWithRotation(basePrompt, apiKeys);
   }
 
   console.log(`Conteúdo grande (${content.length} caracteres), dividindo em chunks...`);
@@ -134,8 +165,8 @@ export async function generateContentWithChunks(
     // Modifica o prompt para incluir apenas este chunk
     const chunkPrompt = basePrompt.replace(content, chunks[i]);
 
-    // Gera o conteúdo para este chunk
-    const result = await generateLongContent(chunkPrompt);
+    // Gera o conteúdo para este chunk (com rotação de API keys)
+    const result = await generateWithRotation(chunkPrompt, apiKeys);
     results.push(result);
 
     // Rate limiting: aguarda 2 segundos entre chunks (exceto no último)
