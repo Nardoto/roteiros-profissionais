@@ -96,9 +96,10 @@ export default function Home() {
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
+            try {
+              const data = JSON.parse(line.slice(6));
 
-            if (data.error) {
+              if (data.error) {
               setError(data.message);
               setIsGenerating(false);
               stopTimer();
@@ -120,6 +121,10 @@ export default function Home() {
                 message: data.message,
                 currentFile: data.currentFile,
               });
+            }
+            } catch (parseError) {
+              // Ignora erros de parsing de JSON incompleto (chunks cortados)
+              console.warn('Chunk JSON incompleto, ignorando:', parseError);
             }
           }
         }
