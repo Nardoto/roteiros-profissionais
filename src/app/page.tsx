@@ -125,7 +125,8 @@ export default function Home() {
                 setGeneratedScripts(finalResult);
                 return currentPartialFiles; // Retornar o mesmo estado
               });
-              const totalTime = Math.floor((Date.now() - startTime) / 1000);
+              // Usar o elapsedTime que já foi atualizado durante todo o processo
+              const totalTime = elapsedTime || Math.floor((Date.now() - startTime) / 1000);
               const timeMessage = totalTime >= 60
                 ? `${Math.floor(totalTime / 60)} minuto${Math.floor(totalTime / 60) !== 1 ? 's' : ''} e ${totalTime % 60} segundo${totalTime % 60 !== 1 ? 's' : ''}`
                 : `${totalTime} segundo${totalTime !== 1 ? 's' : ''}`;
