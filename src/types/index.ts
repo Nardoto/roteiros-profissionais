@@ -27,7 +27,10 @@ export interface ApiKeys {
 }
 
 // Tipo de modo de roteiro
-export type ScriptMode = 'documentary' | 'character';
+export type ScriptMode = 'documentary' | 'story';
+
+// Idioma para modo história
+export type StoryLanguage = 'en' | 'es';
 
 // Seleção de PROVIDER (empresa), não API específica
 export interface ApiSelection {
@@ -63,6 +66,7 @@ export interface ScriptInput {
   apiKeys: ApiKeys;
   mode: ScriptMode; // Modo do roteiro
   selectedApi: ApiSelection; // API escolhida
+  language?: StoryLanguage; // Idioma (apenas para modo 'story')
 }
 
 export interface GeneratedScript {
