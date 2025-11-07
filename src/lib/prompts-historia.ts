@@ -168,8 +168,8 @@ export function buildTopicoPrompt(
     ? `Write Topic ${topicNumber} following these strict guidelines:
 
 CRITICAL RULES:
-1. Target length: 18,000 to 22,000 characters (will be validated)
-2. Distribute content evenly across the 8 subtopics
+1. Target length: 20,000 WORDS or 100,000 CHARACTERS (will be validated - must be between 18,000-22,000 words OR 90,000-110,000 characters)
+2. Distribute content evenly across the 8 subtopics (~2,500 words each)
 3. Write as a book narrative in third person
 4. Use Bible verses naturally integrated into the text
 5. Do NOT repeat information from other topics
@@ -188,13 +188,13 @@ STRUCTURE:
 ${estrutura}
 ${previousContext}
 
-Write ONLY Topic ${topicNumber} with its 8 subtopics. Target: 18,000-22,000 characters total.
+Write ONLY Topic ${topicNumber} with its 8 subtopics. Target: 20,000 WORDS or 100,000 CHARACTERS (18,000-22,000 words OR 90,000-110,000 chars).
 Do NOT add title, header, or topic number - start directly with the narrative.`
     : `Escribe el Tópico ${topicNumber} siguiendo estas pautas estrictas:
 
 REGLAS CRÍTICAS:
-1. Longitud objetivo: 18,000 a 22,000 caracteres (será validado)
-2. Distribuye el contenido uniformemente entre los 8 subtópicos
+1. Longitud objetivo: 20,000 PALABRAS o 100,000 CARACTERES (será validado - debe estar entre 18,000-22,000 palabras O 90,000-110,000 caracteres)
+2. Distribuye el contenido uniformemente entre los 8 subtópicos (~2,500 palabras cada uno)
 3. Escribe como narrativa de libro en tercera persona
 4. Usa versículos bíblicos integrados naturalmente al texto
 5. NO repitas información de otros tópicos
@@ -213,7 +213,7 @@ ESTRUCTURA:
 ${estrutura}
 ${previousContext}
 
-Escribe SOLO el Tópico ${topicNumber} con sus 8 subtópicos. Objetivo: 18,000-22,000 caracteres en total.
+Escribe SOLO el Tópico ${topicNumber} con sus 8 subtópicos. Objetivo: 20,000 PALABRAS o 100,000 CARACTERES (18,000-22,000 palabras O 90,000-110,000 caracteres).
 NO agregues título, encabezado o número de tópico - comienza directamente con la narrativa.`;
 
   return instructions;

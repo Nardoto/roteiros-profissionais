@@ -13,6 +13,7 @@ import {
   validateRoteiro,
   validateTextoNarrado,
   countWords,
+  countCharacters,
   extractSectionWordCounts,
 } from '@/lib/validators';
 import { ScriptInput, GeneratedScript } from '@/types';
@@ -233,9 +234,10 @@ export async function POST(request: NextRequest) {
 
         // Validar texto narrado
         const totalWords = countWords(textoNarrado);
+        const totalCharacters = countCharacters(textoNarrado);
         sendEvent(controller, {
           progress: 90,
-          message: `Texto narrado completo: ${totalWords} palavras. Validando qualidade...`,
+          message: `Texto narrado completo: ${totalWords.toLocaleString()} palavras, ${totalCharacters.toLocaleString()} caracteres. Validando...`,
           currentFile: 'textoNarrado',
         });
 
@@ -300,6 +302,7 @@ export async function POST(request: NextRequest) {
           titulo,
           stats: {
             totalWords: totalWords,
+            totalCharacters: totalCharacters,
             sectionWords: sectionCounts,
             validated: totalWords >= 8500,
           },
@@ -317,6 +320,7 @@ export async function POST(request: NextRequest) {
           complete: true,
           stats: {
             totalWords: totalWords,
+            totalCharacters: totalCharacters,
             sectionWords: sectionCounts,
             validated: totalWords >= 8500,
           }

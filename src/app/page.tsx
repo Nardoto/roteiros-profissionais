@@ -110,17 +110,21 @@ export default function Home() {
             }
 
             if (data.complete) {
-              // Construir o resultado final a partir dos partialFiles
-              const finalResult: GeneratedScript & { stats: any } = {
-                roteiro: partialFiles.roteiro?.content || '',
-                trilha: partialFiles.trilha?.content || '',
-                textoNarrado: partialFiles.textoNarrado?.content || '',
-                personagens: partialFiles.personagens?.content || '',
-                titulo: partialFiles.titulo?.content || '',
-                stats: data.stats || {}
-              };
+              // Usar callback setPartialFiles para garantir que temos o estado mais recente
+              setPartialFiles(currentPartialFiles => {
+                // Construir o resultado final a partir dos partialFiles mais recentes
+                const finalResult: GeneratedScript & { stats: any } = {
+                  roteiro: currentPartialFiles.roteiro?.content || '',
+                  trilha: currentPartialFiles.trilha?.content || '',
+                  textoNarrado: currentPartialFiles.textoNarrado?.content || '',
+                  personagens: currentPartialFiles.personagens?.content || '',
+                  titulo: currentPartialFiles.titulo?.content || '',
+                  stats: data.stats || {}
+                };
 
-              setGeneratedScripts(finalResult);
+                setGeneratedScripts(finalResult);
+                return currentPartialFiles; // Retornar o mesmo estado
+              });
               const totalTime = Math.floor((Date.now() - startTime) / 1000);
               const timeMessage = totalTime >= 60
                 ? `${Math.floor(totalTime / 60)} minuto${Math.floor(totalTime / 60) !== 1 ? 's' : ''} e ${totalTime % 60} segundo${totalTime % 60 !== 1 ? 's' : ''}`
@@ -252,23 +256,27 @@ export default function Home() {
                 {(generatedScripts as any).stats && (
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h3 className="text-lg font-bold mb-3">📊 Estatísticas</h3>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Total</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Palavras</p>
                         <p className="text-lg font-bold text-green-600 dark:text-green-400">
                           {(generatedScripts as any).stats.totalWords.toLocaleString()}
                         </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Meta: 8.500+</p>
                       </div>
                       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Meta</p>
-                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">8,500</p>
-                      </div>
-                      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
-                        <p className="text-base font-bold text-purple-600 dark:text-purple-400">
-                          {(generatedScripts as any).stats.validated ? '✓ OK' : '⚠ Rev'}
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Caracteres</p>
+                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {(generatedScripts as any).stats.totalCharacters?.toLocaleString() || 'N/A'}
                         </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sem espaços</p>
                       </div>
+                    </div>
+                    <div className="mt-2 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Status</p>
+                      <p className="text-base font-bold text-purple-600 dark:text-purple-400">
+                        {(generatedScripts as any).stats.validated ? '✓ Válido (Meta atingida)' : '⚠ Revisar (Abaixo da meta)'}
+                      </p>
                     </div>
                     {!(generatedScripts as any).stats.validated && (
                       <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">

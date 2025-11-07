@@ -18,6 +18,9 @@ ABORDAGEM OBRIGATÓRIA - EQUILÍBRIO ENTRE FÉ E ANÁLISE:
 export function buildRoteiroPrompt(input: ScriptInput): string {
   return `${INSTRUCOES_BASE}
 
+⚠️ IMPORTANTE: Este é o PRIMEIRO arquivo a ser gerado. Ele serve como BASE para todos os outros arquivos.
+O texto narrado será criado REVISITANDO este roteiro ato por ato.
+
 TEMA DO VÍDEO: ${input.title}
 
 SINOPSE:
@@ -261,6 +264,9 @@ APERTURA - EL GANCHO (0:00-2:30)
 
   return `${INSTRUCOES_BASE}
 
+⚠️ IMPORTANTE: Você está expandindo o ROTEIRO ESTRUTURADO que foi criado PRIMEIRO.
+Use-o como BASE e referência para criar o texto narrado detalhado.
+
 ROTEIRO ESTRUTURADO - SEÇÃO HOOK:
 ${roteiro.match(/HOOK[\s\S]*?(?=ATO I|$)/i)?.[0] || 'HOOK não encontrado'}
 
@@ -296,6 +302,10 @@ export function buildTextoNarradoAtoPrompt(
     : `TAREA: Expandir el ACTO ${atoRoman} en texto narrado fluido en ESPAÑOL.`;
 
   return `${INSTRUCOES_BASE}
+
+⚠️ IMPORTANTE: Você está expandindo o ROTEIRO ESTRUTURADO que foi criado PRIMEIRO.
+REVISITE o roteiro do ${atoRoman} abaixo e use-o como BASE e referência para criar o texto narrado detalhado.
+Ao mudar de ato, sempre volte ao roteiro estruturado para garantir consistência.
 
 ROTEIRO ESTRUTURADO - ATO ${atoRoman}:
 ${atoContent}

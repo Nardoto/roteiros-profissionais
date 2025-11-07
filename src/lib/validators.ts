@@ -32,6 +32,11 @@ export function countWords(text: string): number {
   return text.trim().split(/\s+/).length;
 }
 
+export function countCharacters(text: string): number {
+  // Remove espaços em branco para contar apenas caracteres visíveis
+  return text.replace(/\s/g, '').length;
+}
+
 export function extractSectionWordCounts(texto: string): Record<string, number> {
   const sections = {
     'HOOK': /OPENING[\s\S]*?(?=ACT ONE|$)/i,
