@@ -161,17 +161,19 @@ export default function Home() {
   return (
     <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <BookOpen size={40} className="text-primary" />
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        {/* Header compacto */}
+        <div className="text-center mb-8">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Criado por <span className="font-semibold text-primary">Nardoto</span>
+          </p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <BookOpen size={28} className="text-primary" />
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Gerador de Roteiros Bíblicos
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-            Gere roteiros profissionais completos para documentários bíblicos usando IA.
-            5 arquivos criados automaticamente em minutos.
+          <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto">
+            Roteiros profissionais para documentários bíblicos com IA • 5 arquivos em minutos
           </p>
         </div>
 
