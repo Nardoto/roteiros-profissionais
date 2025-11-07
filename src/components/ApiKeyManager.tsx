@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Key, Plus, X, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Key, Plus, X, Eye, EyeOff, ChevronDown, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { ApiKeys } from '@/types';
 
 interface ApiKeyManagerProps {
@@ -13,6 +13,8 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
   const [showKeys, setShowKeys] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [testingKeys, setTestingKeys] = useState<Record<string, boolean>>({});
+  const [keyStatus, setKeyStatus] = useState<Record<string, 'valid' | 'invalid' | null>>({});
 
   // Carregar API keys do localStorage ao montar
   useEffect(() => {
@@ -50,6 +52,15 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
       ...apiKeys,
       [provider]: [...apiKeys[provider], '']
     });
+
+    // Focar no novo campo após adicionar
+    setTimeout(() => {
+      const inputs = document.querySelectorAll(`input[placeholder*="${provider.charAt(0).toUpperCase() + provider.slice(1)}"]`);
+      const lastInput = inputs[inputs.length - 1] as HTMLInputElement;
+      if (lastInput) {
+        lastInput.focus();
+      }
+    }, 50);
   };
 
   const removeKey = (provider: 'gemini' | 'groq' | 'cohere' | 'huggingface', index: number) => {
@@ -90,6 +101,36 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
     if (apiKeys.together?.trim()) count++;
     if (apiKeys.perplexity?.trim()) count++;
     return count;
+  };
+
+  // Testar uma API key do Gemini
+  const testGeminiKey = async (key: string, keyId: string) => {
+    if (!key.trim()) return;
+
+    setTestingKeys(prev => ({ ...prev, [keyId]: true }));
+    setKeyStatus(prev => ({ ...prev, [keyId]: null }));
+
+    try {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(key);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+      // Teste simples: gerar "OK"
+      const result = await model.generateContent('Say OK');
+      const response = await result.response;
+      const text = response.text();
+
+      if (text) {
+        setKeyStatus(prev => ({ ...prev, [keyId]: 'valid' }));
+      } else {
+        setKeyStatus(prev => ({ ...prev, [keyId]: 'invalid' }));
+      }
+    } catch (error: any) {
+      console.error('Erro ao testar API:', error);
+      setKeyStatus(prev => ({ ...prev, [keyId]: 'invalid' }));
+    } finally {
+      setTestingKeys(prev => ({ ...prev, [keyId]: false }));
+    }
   };
 
   return (
@@ -154,34 +195,75 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 🔷 Google Gemini (múltiplas contas)
               </label>
-              {apiKeys.gemini.map((key, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type={showKeys ? 'text' : 'password'}
-                    value={key}
-                    onChange={(e) => updateKey('gemini', index, e.target.value)}
-                    placeholder={`API Key do Gemini ${index + 1}`}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white font-mono text-sm"
-                  />
-                  {apiKeys.gemini.length > 1 && (
+              {apiKeys.gemini.map((key, index) => {
+                const keyId = `gemini-${index}`;
+                const isTesting = testingKeys[keyId];
+                const status = keyStatus[keyId];
+
+                return (
+                  <div key={index} className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type={showKeys ? 'text' : 'password'}
+                        value={key}
+                        onChange={(e) => {
+                          updateKey('gemini', index, e.target.value);
+                          // Limpar status quando modificar a key
+                          setKeyStatus(prev => ({ ...prev, [keyId]: null }));
+                        }}
+                        placeholder={`API Key do Gemini ${index + 1}`}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white font-mono text-sm"
+                      />
+                      {/* Indicador de status */}
+                      {status === 'valid' && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <CheckCircle size={18} className="text-green-500" />
+                        </div>
+                      )}
+                      {status === 'invalid' && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <AlertCircle size={18} className="text-red-500" />
+                        </div>
+                      )}
+                    </div>
                     <button
-                      onClick={() => removeKey('gemini', index)}
-                      className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      type="button"
+                      onClick={() => testGeminiKey(key, keyId)}
+                      disabled={isTesting || !key.trim()}
+                      className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      title="Testar API Key"
                     >
-                      <X size={18} />
+                      {isTesting ? (
+                        <Loader size={18} className="animate-spin" />
+                      ) : (
+                        <CheckCircle size={18} />
+                      )}
                     </button>
-                  )}
-                </div>
-              ))}
+                    {apiKeys.gemini.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeKey('gemini', index)}
+                        className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
               <button
-                onClick={() => addKey('gemini')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  addKey('gemini');
+                }}
                 className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
               >
                 <Plus size={18} />
                 Adicionar outra conta Gemini
               </button>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Gratuito • Limite: 15 RPM, 1M TPM • <a href="https://aistudio.google.com/apikey" target="_blank" className="text-primary underline">Obter API</a>
+                Gratuito • Limite: 15 RPM, 1M TPM • <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary underline">Obter API</a>
               </p>
             </div>
 
@@ -192,6 +274,7 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
               </label>
               {apiKeys.groq.length === 0 && (
                 <button
+                  type="button"
                   onClick={() => addKey('groq')}
                   className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors"
                 >
@@ -208,6 +291,7 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white font-mono text-sm"
                   />
                   <button
+                    type="button"
                     onClick={() => removeKey('groq', index)}
                     className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                   >
@@ -217,6 +301,7 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
               ))}
               {apiKeys.groq.length > 0 && (
                 <button
+                  type="button"
                   onClick={() => addKey('groq')}
                   className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
                 >

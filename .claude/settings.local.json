@@ -15,7 +15,10 @@
       "Bash(git push:*)",
       "Bash(git rm:*)",
       "Bash(git reset:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

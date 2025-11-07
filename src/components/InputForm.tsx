@@ -41,6 +41,10 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       return;
     }
 
+    // Debug log
+    console.log('selectedApi:', selectedApi);
+    console.log('apiKeys:', apiKeys);
+
     // Validar que um provider foi selecionado
     if (!selectedApi) {
       alert('Por favor, selecione um provider de IA para usar.');

@@ -109,7 +109,11 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelec
           p => p.provider === parsed.provider
         );
         if (exists) {
-          onChange(parsed);
+          // Encontrar o provider atualizado (com contagem correta)
+          const currentProvider = availableProviders.find(p => p.provider === parsed.provider);
+          if (currentProvider) {
+            onChange(currentProvider);
+          }
         } else if (availableProviders.length > 0) {
           // Se não existe mais, selecionar o primeiro disponível
           onChange(availableProviders[0]);
@@ -124,7 +128,7 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelec
       // Se não há seleção e há providers disponíveis, selecionar o primeiro
       onChange(availableProviders[0]);
     }
-  }, []);
+  }, [availableProviders.length, onChange, selectedApi]);
 
   // Salvar no localStorage quando mudar
   useEffect(() => {
