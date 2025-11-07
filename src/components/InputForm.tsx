@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ScriptInput, ApiKeys, ApiSelection, ScriptMode } from '@/types';
+import { ScriptInput, ApiKeys, ApiSelection, ScriptMode, StoryLanguage } from '@/types';
 import { Sparkles } from 'lucide-react';
 import ApiKeyManager from './ApiKeyManager';
 import ApiSelector from './ApiSelector';
@@ -18,6 +18,7 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [synopsis, setSynopsis] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState('');
   const [scriptMode, setScriptMode] = useState<ScriptMode>('documentary');
+  const [language, setLanguage] = useState<StoryLanguage>('en');
   const [selectedApi, setSelectedApi] = useState<ApiSelection | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
     // Gratuitos
@@ -89,7 +90,8 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       knowledgeBase: knowledgeBase.trim() || undefined,
       mode: scriptMode,
       selectedApi: selectedApi,
-      apiKeys: cleanedApiKeys
+      apiKeys: cleanedApiKeys,
+      language: language
     });
   };
 
@@ -102,6 +104,54 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
 
       {/* Seletor de Modo */}
       <ScriptModeSelector selectedMode={scriptMode} onChange={setScriptMode} />
+
+      {/* Seletor de Idioma */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Idioma do Roteiro *
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setLanguage('en')}
+            className={`px-4 py-3 rounded-lg border-2 transition-all ${
+              language === 'en'
+                ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+            }`}
+            disabled={isGenerating}
+          >
+            <div className="text-center">
+              <p className="font-semibold">🇺🇸 English</p>
+              <p className="text-xs mt-1 opacity-75">
+                {scriptMode === 'documentary' ? 'Narração + Título' : 'Todo conteúdo'}
+              </p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage('es')}
+            className={`px-4 py-3 rounded-lg border-2 transition-all ${
+              language === 'es'
+                ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+            }`}
+            disabled={isGenerating}
+          >
+            <div className="text-center">
+              <p className="font-semibold">🇪🇸 Español</p>
+              <p className="text-xs mt-1 opacity-75">
+                {scriptMode === 'documentary' ? 'Narración + Título' : 'Todo contenido'}
+              </p>
+            </div>
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {scriptMode === 'documentary'
+            ? 'Define o idioma do texto narrado (arquivo 3) e título/descrição (arquivo 5)'
+            : 'Define o idioma de todos os arquivos gerados'}
+        </p>
+      </div>
 
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
 
