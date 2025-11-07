@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import InputForm from '@/components/InputForm';
 import ProgressBar from '@/components/ProgressBar';
-import FilePreview from '@/components/FilePreview';
 import DownloadButtons from '@/components/DownloadButtons';
 import ProgressiveDownloads from '@/components/ProgressiveDownloads';
 import Footer from '@/components/Footer';
@@ -187,114 +186,114 @@ export default function Home() {
             <InputForm onSubmit={handleGenerate} isGenerating={isGenerating} />
           </div>
 
-          {/* Right Column - Info/Instructions */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
-            <h2 className="text-2xl font-bold mb-6">📚 Como Funciona</h2>
-            <div className="space-y-4 text-gray-700 dark:text-gray-300">
-              <div className="flex gap-3">
-                <span className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">1</span>
-                <div>
-                  <h3 className="font-semibold mb-1">Preencha os Dados</h3>
-                  <p className="text-sm">Título, sinopse e base de conhecimento (opcional)</p>
-                </div>
-              </div>
+          {/* Right Column - Info/Status/Results */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold mb-4">📚 Como Funciona</h2>
 
-              <div className="flex gap-3">
-                <span className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">2</span>
-                <div>
-                  <h3 className="font-semibold mb-1">Aguarde a Geração</h3>
-                  <p className="text-sm">A IA criará 5 arquivos completos (5-10 minutos)</p>
-                </div>
+            {/* Instruções compactas */}
+            <div className="space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+              <div className="flex gap-2 items-center">
+                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">1</span>
+                <p className="text-xs">Preencha título e sinopse</p>
               </div>
-
-              <div className="flex gap-3">
-                <span className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">3</span>
-                <div>
-                  <h3 className="font-semibold mb-1">Baixe os Arquivos</h3>
-                  <p className="text-sm">Download individual ou completo em .zip</p>
-                </div>
+              <div className="flex gap-2 items-center">
+                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">2</span>
+                <p className="text-xs">Aguarde geração (5-10 min)</p>
+              </div>
+              <div className="flex gap-2 items-center">
+                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">3</span>
+                <p className="text-xs">Baixe os arquivos</p>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">📦 Arquivos Gerados:</h3>
-              <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
-                <li>• 01_Roteiro_Estruturado.txt (PT)</li>
-                <li>• 02_Trilha_Sonora.txt (PT/EN)</li>
-                <li>• 03_Texto_Narrado.txt (EN, 8500+ palavras)</li>
-                <li>• 04_Personagens_Descricoes.txt (EN)</li>
-                <li>• 05_Titulo_Descricao.txt (PT)</li>
+            {/* Lista de arquivos compacta */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1 text-sm">📦 5 Arquivos:</h3>
+              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-0.5">
+                <li>• Roteiro (PT) • Trilha (PT/EN)</li>
+                <li>• Texto Narrado (EN, 8500+ palavras)</li>
+                <li>• Personagens (EN) • Título (PT)</li>
               </ul>
             </div>
+
+            {/* Progress Bar */}
+            {(isGenerating || generatedScripts) && (
+              <div className="mt-4">
+                <ProgressBar
+                  progress={progress.progress}
+                  message={progress.message}
+                  currentFile={progress.currentFile}
+                  elapsedTime={elapsedTime}
+                  formatElapsedTime={formatElapsedTime}
+                />
+              </div>
+            )}
+
+            {/* Progressive Downloads */}
+            {currentInput && Object.keys(partialFiles).length > 0 && (
+              <div className="mt-4">
+                <ProgressiveDownloads partialFiles={partialFiles} title={currentInput.title} />
+              </div>
+            )}
+
+            {/* Downloads finais */}
+            {generatedScripts && currentInput && (
+              <div className="mt-4 space-y-4">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                    📥 Downloads
+                  </h3>
+                  <DownloadButtons scripts={generatedScripts} title={currentInput.title} />
+                </div>
+
+                {/* Stats */}
+                {(generatedScripts as any).stats && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h3 className="text-lg font-bold mb-3">📊 Estatísticas</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Total</p>
+                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {(generatedScripts as any).stats.totalWords.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Meta</p>
+                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">8,500</p>
+                      </div>
+                      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
+                        <p className="text-base font-bold text-purple-600 dark:text-purple-400">
+                          {(generatedScripts as any).stats.validated ? '✓ OK' : '⚠ Rev'}
+                        </p>
+                      </div>
+                    </div>
+                    {!(generatedScripts as any).stats.validated && (
+                      <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                          <strong>💡 Como revisar:</strong> O texto narrado tem menos de 8.500 palavras.
+                          Para atingir a meta, você pode:
+                        </p>
+                        <ul className="text-xs text-yellow-700 dark:text-yellow-400 mt-1 space-y-0.5 ml-4">
+                          <li>• Adicionar mais detalhes na sinopse</li>
+                          <li>• Usar a base de conhecimento</li>
+                          <li>• Gerar novamente com contexto adicional</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Progress Bar */}
-        {(isGenerating || generatedScripts) && (
-          <div className="mt-8">
-            <ProgressBar
-              progress={progress.progress}
-              message={progress.message}
-              currentFile={progress.currentFile}
-              elapsedTime={elapsedTime}
-              formatElapsedTime={formatElapsedTime}
-            />
-          </div>
-        )}
-
-        {/* Progressive Downloads */}
-        {currentInput && Object.keys(partialFiles).length > 0 && (
-          <div className="mt-8">
-            <ProgressiveDownloads partialFiles={partialFiles} title={currentInput.title} />
-          </div>
-        )}
-
         {/* Error Display */}
         {error && (
-          <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-700 dark:text-red-400">
+          <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-700 dark:text-red-400 text-sm">
               <strong>Erro:</strong> {error}
             </p>
-          </div>
-        )}
-
-        {/* Results */}
-        {generatedScripts && currentInput && (
-          <div className="mt-8 space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
-              <h2 className="text-2xl font-bold mb-6">📥 Downloads</h2>
-              <DownloadButtons scripts={generatedScripts} title={currentInput.title} />
-            </div>
-
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
-              <h2 className="text-2xl font-bold mb-6">👁️ Preview dos Arquivos</h2>
-              <FilePreview scripts={generatedScripts} />
-            </div>
-
-            {/* Stats */}
-            {(generatedScripts as any).stats && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
-                <h2 className="text-2xl font-bold mb-6">📊 Estatísticas</h2>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total de Palavras</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {(generatedScripts as any).stats.totalWords.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Meta Mínima</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">8,500</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {(generatedScripts as any).stats.validated ? '✓ Válido' : '⚠ Revisar'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
