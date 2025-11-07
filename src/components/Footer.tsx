@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="text-center">
           <p className="text-xs text-gray-400 dark:text-gray-600">
-            v1.1.0 • Powered by AI
+            v1.2.0 • Powered by AI
           </p>
         </div>
       </div>
