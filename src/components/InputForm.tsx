@@ -53,11 +53,11 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   // Ajustar targetCharacters quando o modo mudar
   useEffect(() => {
     if (scriptMode === 'documentary') {
-      setTargetCharacters(30000);
+      setTargetCharacters(9000); // Modo teste para desenvolvimento
     } else if (scriptMode === 'story') {
-      setTargetCharacters(100000);
+      setTargetCharacters(9000); // Modo teste para desenvolvimento
     } else if (scriptMode === 'curiosities') {
-      setTargetCharacters(20000);
+      setTargetCharacters(9000); // Modo teste para desenvolvimento
     }
   }, [scriptMode]);
 
@@ -302,25 +302,54 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
               <span>Total de Caracteres do Roteiro</span>
             </div>
           </label>
+
+          {/* Botões de Preset Rápido */}
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setTargetCharacters(9000)}
+              className="flex-1 px-3 py-2 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-all disabled:opacity-50"
+              disabled={isGenerating}
+            >
+              ⚡ Teste (9k)
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetCharacters(scriptMode === 'story' ? 30000 : 20000)}
+              className="flex-1 px-3 py-2 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all disabled:opacity-50"
+              disabled={isGenerating}
+            >
+              📊 Médio ({scriptMode === 'story' ? '30k' : '20k'})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetCharacters(scriptMode === 'story' ? 100000 : 30000)}
+              className="flex-1 px-3 py-2 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-all disabled:opacity-50"
+              disabled={isGenerating}
+            >
+              🎯 Completo ({scriptMode === 'story' ? '100k' : '30k'})
+            </button>
+          </div>
+
           <input
             type="number"
             id="targetCharacters"
             value={targetCharacters}
             onChange={(e) => setTargetCharacters(Number(e.target.value))}
-            min={10000}
+            min={5000}
             max={500000}
-            step={10000}
+            step={1000}
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
             placeholder="100000"
             disabled={isGenerating}
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             💡 {scriptMode === 'documentary'
-              ? 'Recomendado: 30.000 caracteres (~60min). A IA dividirá automaticamente entre as seções.'
+              ? 'Use "Teste" para protótipos rápidos (~2 min). "Completo" para produção final (~10 min).'
               : scriptMode === 'story'
-              ? 'Recomendado: 100.000 caracteres. A IA dividirá automaticamente entre os 3 tópicos (~33.000 cada).'
+              ? 'Use "Teste (9k)" para validar rápido (~2-3 min). "Completo (100k)" para produção (~15 min).'
               : scriptMode === 'curiosities'
-              ? 'Recomendado: 20.000 caracteres. A IA dividirá automaticamente entre os tópicos.'
+              ? 'Use "Teste" para validação rápida. "Completo" para versão final.'
               : 'Defina o total de caracteres desejado para seu roteiro personalizado.'}
           </p>
         </div>

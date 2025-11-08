@@ -462,15 +462,15 @@ export async function POST(request: NextRequest) {
 
         // Validar texto narrado
         totalCharacters = countCharacters(textoNarrado);
-        const targetMinDoc = input.targetCharacters || 30000;
+        const targetMinDoc = input.targetCharacters || 9000;
         sendEvent(controller, {
           progress: 90,
           message: `Texto narrado completo: ${totalCharacters.toLocaleString()} caracteres. Validando...`,
           currentFile: 'textoNarrado',
         });
 
-        if (totalCharacters < targetMinDoc * 0.8) {
-          console.warn(`Aviso: Texto narrado tem apenas ${totalCharacters} caracteres (mínimo: ${Math.floor(targetMinDoc * 0.8)})`);
+        if (totalCharacters < targetMinDoc * 0.6) {
+          console.warn(`Aviso: Texto narrado tem apenas ${totalCharacters} caracteres (mínimo: ${Math.floor(targetMinDoc * 0.6)})`);
         }
 
         // ETAPA 4: Gerar Personagens (EN)
@@ -520,7 +520,8 @@ export async function POST(request: NextRequest) {
         } // Fim do else para modo documentário
 
         // Resultado final - validar baseado em caracteres
-        const targetMinimum = input.targetCharacters ? input.targetCharacters * 0.8 : (input.mode === 'story' ? 80000 : 24000);
+        // Para testes, aceita 60% do valor alvo (permite roteiros menores)
+        const targetMinimum = input.targetCharacters ? input.targetCharacters * 0.6 : (input.mode === 'story' ? 5000 : 5000);
         const validated = totalCharacters >= targetMinimum;
 
         const result: GeneratedScript & { stats: any } = {
