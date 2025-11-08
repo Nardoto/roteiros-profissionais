@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
         let textoNarrado = '';
         let personagens = '';
         let titulo = '';
+        let totalCharacters = 0;
 
         // Check if it's story mode
         if (input.mode === 'story') {
@@ -313,7 +314,7 @@ export async function POST(request: NextRequest) {
           });
 
           // Calcular total de caracteres para modo história
-          const totalCharacters = countCharacters(textoNarrado);
+          totalCharacters = countCharacters(textoNarrado);
 
         } else {
           // ========== MODO DOCUMENTÁRIO: Usar fluxo original com ATOS ==========
@@ -460,7 +461,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Validar texto narrado
-        const totalCharacters = countCharacters(textoNarrado);
+        totalCharacters = countCharacters(textoNarrado);
         const targetMinDoc = input.targetCharacters || 30000;
         sendEvent(controller, {
           progress: 90,
