@@ -27,10 +27,21 @@ export interface ApiKeys {
 }
 
 // Tipo de modo de roteiro
-export type ScriptMode = 'documentary' | 'story';
+export type ScriptMode = 'documentary' | 'story' | 'curiosities' | 'custom';
 
-// Idioma para modo história
-export type StoryLanguage = 'en' | 'es';
+// Configuração detalhada para cada tipo
+export interface ScriptTypeConfig {
+  id: ScriptMode;
+  name: string;
+  icon: string;
+  description: string;
+  structure: string;
+  characterTarget: string;
+  color: string;
+}
+
+// Idioma para modo história e documentário
+export type StoryLanguage = 'pt' | 'en' | 'es';
 
 // Seleção de PROVIDER (empresa), não API específica
 export interface ApiSelection {
@@ -59,6 +70,17 @@ export interface ScriptHistory {
   filesGenerated: FileType[];
 }
 
+// Template salvo pelo usuário
+export interface SavedTemplate {
+  id: string;
+  name: string;
+  mode: ScriptMode;
+  structure?: string;
+  customPrompts?: Record<string, string>;
+  createdAt: string;
+  lastUsed?: string;
+}
+
 export interface ScriptInput {
   title: string;
   synopsis: string;
@@ -66,7 +88,10 @@ export interface ScriptInput {
   apiKeys: ApiKeys;
   mode: ScriptMode; // Modo do roteiro
   selectedApi: ApiSelection; // API escolhida
-  language?: StoryLanguage; // Idioma (apenas para modo 'story')
+  language?: StoryLanguage; // Idioma
+  targetCharacters?: number; // Total de caracteres desejado para o roteiro
+  customPrompts?: Record<string, string>; // Prompts customizados pelo usuário
+  templateId?: string; // ID do template usado
 }
 
 export interface GeneratedScript {

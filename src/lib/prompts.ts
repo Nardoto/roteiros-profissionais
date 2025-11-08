@@ -181,8 +181,61 @@ REVELAÇÃO: "discovery", "revelation", "breakthrough", "uplifting"
 `;
 }
 
-export function buildTextoNarradoHookPrompt(roteiro: string, input: ScriptInput, language: 'en' | 'es' = 'en'): string {
+export function buildTextoNarradoHookPrompt(roteiro: string, input: ScriptInput, language: 'pt' | 'en' | 'es' = 'pt'): string {
+  const isPt = language === 'pt';
   const isEnglish = language === 'en';
+
+  // Se for português, mantém tudo em português (comportamento padrão)
+  if (isPt) {
+    return `${INSTRUCOES_BASE}
+
+⚠️ IMPORTANTE: Você está expandindo o ROTEIRO ESTRUTURADO que foi criado PRIMEIRO.
+Use-o como BASE e referência para criar o texto narrado detalhado.
+
+ROTEIRO ESTRUTURADO - SEÇÃO HOOK:
+${roteiro.match(/HOOK[\s\S]*?(?=ATO I|$)/i)?.[0] || 'HOOK não encontrado'}
+
+TAREFA: Expandir o HOOK em texto narrado fluído em PORTUGUÊS para o YouTube.
+
+META: 400-500 palavras
+
+CARACTERÍSTICAS ESSENCIAIS:
+- Escrito em primeira pessoa do plural ("nós") ou segunda pessoa ("você")
+- Tom conversacional mas autoritativo
+- Parágrafos de 3-5 frases para facilitar a narração
+- Criar MISTÉRIO e CURIOSIDADE imediatamente
+- Prender o espectador nos primeiros 10 segundos
+
+MODELO DE ABERTURA:
+"Qual a diferença entre [conceito A] e [conceito B]?
+Entre [comparação concreta] e [comparação abstrata]?
+
+Vamos falar sobre [introduzir protagonista/evento com descrição impactante].
+[Nome]. [Descrição em duas palavras].
+
+Mas e se eu te dissesse que [revelação surpreendente]?
+Que [fato específico que contradiz expectativas]?
+
+Nos próximos 55 minutos, vamos [ação específica].
+Você está prestes a descobrir [descoberta principal].
+
+Prepare-se para [experiência emocional/intelectual].
+Isto é [redefinição do tema].
+Vamos começar."
+
+IMPORTANTE:
+- NÃO usar bullets ou listas
+- Texto CORRIDO em parágrafos
+- Transições suaves
+- Linguagem simples e envolvente
+- Criar senso de urgência
+
+Escreva APENAS a seção ABERTURA - O GANCHO em português, formatado assim:
+
+ABERTURA - O GANCHO (0:00-2:30)
+
+[Texto completo aqui em parágrafos corridos]`;
+  }
 
   const taskDescription = isEnglish
     ? 'TASK: Expand the HOOK into fluid narrated text in ENGLISH for YouTube.'

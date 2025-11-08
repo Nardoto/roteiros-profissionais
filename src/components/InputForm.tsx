@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScriptInput, ApiKeys, ApiSelection, ScriptMode, StoryLanguage } from '@/types';
-import { Sparkles } from 'lucide-react';
-import ApiKeyManager from './ApiKeyManager';
-import ApiSelector from './ApiSelector';
-import ScriptModeSelector from './ScriptModeSelector';
-import CostEstimator from './CostEstimator';
+import { Sparkles, Settings2, FileText, BookOpen, CheckCircle, Info, Code } from 'lucide-react';
+import ConfigModal from './ConfigModal';
+import PromptViewer from './PromptViewer';
 
 interface InputFormProps {
   onSubmit: (input: ScriptInput) => void;
@@ -18,11 +16,20 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [synopsis, setSynopsis] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState('');
   const [scriptMode, setScriptMode] = useState<ScriptMode>('documentary');
-  const [language, setLanguage] = useState<StoryLanguage>('en');
-  const [selectedApi, setSelectedApi] = useState<ApiSelection | null>(null);
+  const [language, setLanguage] = useState<StoryLanguage>('pt'); // Português por padrão
+  const [targetCharacters, setTargetCharacters] = useState<number>(100000); // Padrão: 100k caracteres
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPromptViewerOpen, setIsPromptViewerOpen] = useState(false);
+  const [customPrompts, setCustomPrompts] = useState<Record<string, string>>({});
+
+  // API Keys com as chaves do Gemini já preenchidas
   const [apiKeys, setApiKeys] = useState<ApiKeys>({
-    // Gratuitos
-    gemini: [''],
+    // Gratuitos - Gemini já configurado
+    gemini: [
+      'AIzaSyAm5YalZdJ5iowJhMaIfmTCloVCvmWwP8Y',
+      'AIzaSyA5drFLHxNU2eDWo54ZAhDZFZKphgWrjIw',
+      'AIzaSyC3UV9gOufG-1Q6eDJdkItgcmbt3DNq1zw'
+    ],
     groq: [],
     cohere: [],
     huggingface: [],
@@ -34,6 +41,26 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
     perplexity: undefined,
   });
 
+  // Gemini selecionado por padrão
+  const [selectedApi, setSelectedApi] = useState<ApiSelection>({
+    provider: 'gemini',
+    label: 'Google Gemini (3 APIs)'
+  });
+
+  // Adicionar estado para mostrar configurações simplificadas
+  const [showSimpleConfig, setShowSimpleConfig] = useState(false);
+
+  // Ajustar targetCharacters quando o modo mudar
+  useEffect(() => {
+    if (scriptMode === 'documentary') {
+      setTargetCharacters(30000);
+    } else if (scriptMode === 'story') {
+      setTargetCharacters(100000);
+    } else if (scriptMode === 'curiosities') {
+      setTargetCharacters(20000);
+    }
+  }, [scriptMode]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -42,217 +69,365 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       return;
     }
 
-    // Debug log
-    console.log('selectedApi:', selectedApi);
-    console.log('apiKeys:', apiKeys);
-
-    // Validar que um provider foi selecionado
-    if (!selectedApi) {
-      alert('Por favor, selecione um provider de IA para usar.');
-      return;
-    }
-
-    // Validar que o provider selecionado tem API keys configuradas
-    const provider = selectedApi.provider;
-    let hasValidKeys = false;
-
-    if (['gemini', 'groq', 'cohere', 'huggingface'].includes(provider)) {
-      const keys = apiKeys[provider as 'gemini' | 'groq' | 'cohere' | 'huggingface'];
-      hasValidKeys = keys.filter(k => k.trim().length > 0).length > 0;
-    } else if (['openai', 'anthropic', 'mistral', 'together', 'perplexity'].includes(provider)) {
-      const key = apiKeys[provider as 'openai' | 'anthropic' | 'mistral' | 'together' | 'perplexity'];
-      hasValidKeys = !!key?.trim();
-    }
-
-    if (!hasValidKeys) {
-      alert(`Por favor, adicione pelo menos uma API Key para ${selectedApi.label}.`);
-      return;
-    }
-
-    // Limpar e enviar apenas as keys válidas
-    const cleanedApiKeys: any = {
-      gemini: apiKeys.gemini.filter(k => k.trim().length > 0),
-      groq: apiKeys.groq.filter(k => k.trim().length > 0),
-      cohere: apiKeys.cohere.filter(k => k.trim().length > 0),
-      huggingface: apiKeys.huggingface.filter(k => k.trim().length > 0),
-    };
-
-    // Adicionar keys pagas se existirem
-    if (apiKeys.openai?.trim()) cleanedApiKeys.openai = apiKeys.openai.trim();
-    if (apiKeys.anthropic?.trim()) cleanedApiKeys.anthropic = apiKeys.anthropic.trim();
-    if (apiKeys.mistral?.trim()) cleanedApiKeys.mistral = apiKeys.mistral.trim();
-    if (apiKeys.together?.trim()) cleanedApiKeys.together = apiKeys.together.trim();
-    if (apiKeys.perplexity?.trim()) cleanedApiKeys.perplexity = apiKeys.perplexity.trim();
-
     onSubmit({
       title: title.trim(),
       synopsis: synopsis.trim(),
-      knowledgeBase: knowledgeBase.trim() || undefined,
+      knowledgeBase: knowledgeBase.trim(),
+      apiKeys,
       mode: scriptMode,
-      selectedApi: selectedApi,
-      apiKeys: cleanedApiKeys,
-      language: language
+      selectedApi,
+      language,
+      targetCharacters,
+      customPrompts,
+    });
+  };
+
+  // Função para alternar idioma rapidamente
+  const toggleLanguage = () => {
+    setLanguage(prev => {
+      if (prev === 'pt') return 'en';
+      if (prev === 'en') return 'es';
+      return 'pt';
+    });
+  };
+
+  // Função para alternar modo rapidamente
+  const toggleMode = () => {
+    setScriptMode(prev => {
+      if (prev === 'documentary') return 'story';
+      if (prev === 'story') return 'curiosities';
+      if (prev === 'curiosities') return 'custom';
+      return 'documentary';
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* API Key Manager */}
-      <ApiKeyManager apiKeys={apiKeys} onChange={setApiKeys} />
-
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
-
-      {/* Seletor de Modo */}
-      <ScriptModeSelector selectedMode={scriptMode} onChange={setScriptMode} />
-
-      {/* Seletor de Idioma */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Idioma do Roteiro *
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`px-4 py-3 rounded-lg border-2 transition-all ${
-              language === 'en'
-                ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-            }`}
-            disabled={isGenerating}
-          >
-            <div className="text-center">
-              <p className="font-semibold">🇺🇸 English</p>
-              <p className="text-xs mt-1 opacity-75">
-                {scriptMode === 'documentary' ? 'Narração + Título' : 'Todo conteúdo'}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Configuração Rápida - Mais Amigável */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                ⚡ Configuração Rápida
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Já está tudo pronto! Você pode começar imediatamente ou ajustar as configurações.
               </p>
             </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage('es')}
-            className={`px-4 py-3 rounded-lg border-2 transition-all ${
-              language === 'es'
-                ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-            }`}
-            disabled={isGenerating}
-          >
-            <div className="text-center">
-              <p className="font-semibold">🇪🇸 Español</p>
-              <p className="text-xs mt-1 opacity-75">
-                {scriptMode === 'documentary' ? 'Narración + Título' : 'Todo contenido'}
-              </p>
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+              <CheckCircle className="w-5 h-5" />
+              <span className="text-sm font-semibold">Pronto!</span>
             </div>
-          </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Modo */}
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 relative"
+              disabled={isGenerating}
+            >
+              <div className="absolute top-2 right-2">
+                <span className="text-xs text-blue-600 dark:text-blue-400">Trocar</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="text-3xl mb-1">
+                  {scriptMode === 'documentary' ? '📚' :
+                   scriptMode === 'story' ? '🎭' :
+                   scriptMode === 'curiosities' ? '💡' : '✨'}
+                </span>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Tipo</p>
+                  <p className="font-semibold text-sm mt-1">
+                    {scriptMode === 'documentary' ? 'Documentário' :
+                     scriptMode === 'story' ? 'História' :
+                     scriptMode === 'curiosities' ? 'Curiosidades' : 'Custom'}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Idioma */}
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 relative"
+              disabled={isGenerating}
+            >
+              <div className="absolute top-2 right-2">
+                <span className="text-xs text-blue-600 dark:text-blue-400">Trocar</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="text-3xl mb-1">
+                  {language === 'pt' ? '🇧🇷' : language === 'en' ? '🇺🇸' : '🇪🇸'}
+                </span>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Idioma</p>
+                  <p className="font-semibold text-sm mt-1">
+                    {language === 'pt' ? 'Português' : language === 'en' ? 'English' : 'Español'}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Provider */}
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="text-3xl mb-1">🤖</span>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">IA Configurada</p>
+                  <p className="font-semibold text-sm text-green-600 dark:text-green-400 mt-1">
+                    Gemini (3 APIs)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Botões de configurações */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <Settings2 className="w-4 h-4" />
+              Configurações avançadas
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPromptViewerOpen(true)}
+              className={`text-sm transition-colors flex items-center gap-2 ${
+                Object.keys(customPrompts).length > 0
+                  ? 'text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-semibold'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-primary'
+              }`}
+            >
+              <Code className="w-4 h-4" />
+              Ver prompts da IA
+              {Object.keys(customPrompts).length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 text-xs rounded-full">
+                  {Object.keys(customPrompts).length} customizado{Object.keys(customPrompts).length > 1 ? 's' : ''}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          {scriptMode === 'documentary'
-            ? 'Define o idioma do texto narrado (arquivo 3) e título/descrição (arquivo 5)'
-            : 'Define o idioma de todos os arquivos gerados'}
-        </p>
-      </div>
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+        {/* Informação amigável */}
+        <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <Info className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-green-800 dark:text-green-300">
+            <p className="font-semibold mb-1">Tudo configurado automaticamente! 🎉</p>
+            <p>O sistema já está pronto com as melhores configurações. Você só precisa preencher o título e a sinopse abaixo para começar.</p>
+          </div>
+        </div>
 
-      {/* Seletor de API */}
-      <ApiSelector
-        apiKeys={apiKeys}
+        {/* Aviso de prompts customizados */}
+        {Object.keys(customPrompts).length > 0 && (
+          <div className="flex items-start gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <Code className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-purple-800 dark:text-purple-300">
+              <p className="font-semibold mb-1">Prompts Personalizados Ativos ✨</p>
+              <p>
+                Você tem {Object.keys(customPrompts).length} prompt{Object.keys(customPrompts).length > 1 ? 's' : ''} personalizado{Object.keys(customPrompts).length > 1 ? 's' : ''}.
+                O roteiro será gerado com suas modificações.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsPromptViewerOpen(true)}
+                className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline"
+              >
+                Gerenciar prompts →
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+
+        {/* Título */}
+        <div>
+          <label htmlFor="title" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <span>Título do Vídeo *</span>
+            </div>
+          </label>
+          <input
+            type="text"
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
+            placeholder="Ex: A História de Davi e Golias"
+            required
+            disabled={isGenerating}
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            💡 Dica: Use títulos que despertem curiosidade, como "O Segredo Revelado de..." ou "A Verdade Sobre..."
+          </p>
+        </div>
+
+        {/* Sinopse */}
+        <div>
+          <label htmlFor="synopsis" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span>Sinopse *</span>
+            </div>
+          </label>
+          <textarea
+            id="synopsis"
+            value={synopsis}
+            onChange={(e) => setSynopsis(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
+            placeholder="Descreva em poucas palavras sobre o que é o vídeo. Ex: A história de como um jovem pastor derrotou um gigante com apenas uma pedra e muita fé."
+            rows={4}
+            required
+            disabled={isGenerating}
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            💡 Dica: Não precisa ser muito detalhado. 2-3 frases são suficientes para a IA entender o contexto.
+          </p>
+        </div>
+
+        {/* Total de Caracteres */}
+        <div>
+          <label htmlFor="targetCharacters" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-primary" />
+              <span>Total de Caracteres do Roteiro</span>
+            </div>
+          </label>
+          <input
+            type="number"
+            id="targetCharacters"
+            value={targetCharacters}
+            onChange={(e) => setTargetCharacters(Number(e.target.value))}
+            min={10000}
+            max={500000}
+            step={10000}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
+            placeholder="100000"
+            disabled={isGenerating}
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            💡 {scriptMode === 'documentary'
+              ? 'Recomendado: 30.000 caracteres (~60min). A IA dividirá automaticamente entre as seções.'
+              : scriptMode === 'story'
+              ? 'Recomendado: 100.000 caracteres. A IA dividirá automaticamente entre os 3 tópicos (~33.000 cada).'
+              : scriptMode === 'curiosities'
+              ? 'Recomendado: 20.000 caracteres. A IA dividirá automaticamente entre os tópicos.'
+              : 'Defina o total de caracteres desejado para seu roteiro personalizado.'}
+          </p>
+        </div>
+
+        {/* Base de Conhecimento - Simplificada */}
+        {showSimpleConfig && (
+          <div>
+            <label htmlFor="knowledgeBase" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-gray-500" />
+                <span>Informações Extras (Opcional)</span>
+              </div>
+            </label>
+            <textarea
+              id="knowledgeBase"
+              value={knowledgeBase}
+              onChange={(e) => setKnowledgeBase(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
+              placeholder="Se quiser, adicione detalhes específicos que devem aparecer no vídeo..."
+              rows={3}
+              disabled={isGenerating}
+            />
+          </div>
+        )}
+
+        {!showSimpleConfig && (
+          <button
+            type="button"
+            onClick={() => setShowSimpleConfig(true)}
+            className="text-sm text-gray-500 hover:text-primary transition-colors"
+          >
+            + Adicionar informações extras (opcional)
+          </button>
+        )}
+
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+
+        {/* Botão de Gerar - Mais Chamativo */}
+        <div className="space-y-4">
+          <button
+            type="submit"
+            className={`w-full py-5 px-6 rounded-xl font-bold text-white transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 text-lg shadow-xl ${
+              isGenerating
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 animate-gradient'
+            }`}
+            disabled={isGenerating}
+          >
+            <Sparkles className={`w-6 h-6 ${isGenerating ? 'animate-spin' : 'animate-pulse'}`} />
+            {isGenerating ? 'Criando seu Roteiro Profissional...' : 'Criar Meu Roteiro Profissional'}
+          </button>
+
+          <div className="text-center space-y-2">
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              ⏱️ Leva apenas 3-5 minutos
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Você receberá 5 arquivos completos: Roteiro, Trilha Sonora, Narração, Personagens e Título SEO
+            </p>
+          </div>
+        </div>
+      </form>
+
+      {/* Modal de Configurações Avançadas */}
+      <ConfigModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        scriptMode={scriptMode}
+        onScriptModeChange={setScriptMode}
+        language={language}
+        onLanguageChange={setLanguage}
         selectedApi={selectedApi}
-        onChange={setSelectedApi}
+        onApiChange={setSelectedApi}
+        apiKeys={apiKeys}
+        onApiKeysChange={setApiKeys}
+        isGenerating={isGenerating}
       />
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6"></div>
+      {/* Modal de Visualização de Prompts */}
+      <PromptViewer
+        isOpen={isPromptViewerOpen}
+        onClose={() => setIsPromptViewerOpen(false)}
+        scriptInput={{
+          title,
+          synopsis,
+          knowledgeBase,
+          apiKeys,
+          mode: scriptMode,
+          selectedApi,
+          language
+        }}
+        customPrompts={customPrompts}
+        onCustomPromptsChange={setCustomPrompts}
+      />
 
-      {/* Título */}
-      <div>
-        <label htmlFor="title" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Título do Vídeo *
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex: A Arca de Noé - Mito ou Realidade?"
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
-          disabled={isGenerating}
-          required
-        />
-      </div>
+      <style jsx>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
 
-      {/* Sinopse */}
-      <div>
-        <label htmlFor="synopsis" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Sinopse (2-3 parágrafos) *
-        </label>
-        <textarea
-          id="synopsis"
-          value={synopsis}
-          onChange={(e) => setSynopsis(e.target.value)}
-          placeholder="Descreva brevemente o tema, a abordagem desejada, os pontos principais que devem ser abordados..."
-          rows={6}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all resize-y"
-          disabled={isGenerating}
-          required
-        />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Seja específico sobre o ângulo narrativo e os principais argumentos
-        </p>
-      </div>
-
-      {/* Base de Conhecimento */}
-      <div>
-        <label htmlFor="knowledge" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Base de Conhecimento (Opcional)
-        </label>
-        <textarea
-          id="knowledge"
-          value={knowledgeBase}
-          onChange={(e) => setKnowledgeBase(e.target.value)}
-          placeholder="Cole aqui qualquer material de referência, citações bíblicas, descobertas arqueológicas, ou outros dados que devem ser incorporados..."
-          rows={8}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all resize-y"
-          disabled={isGenerating}
-        />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Adicione fontes, versículos, evidências ou contexto adicional (opcional)
-        </p>
-      </div>
-
-      {/* Estimativa de Custo */}
-      {selectedApi && (title.trim() || synopsis.trim()) && (
-        <CostEstimator
-          selectedApi={selectedApi}
-          synopsisLength={synopsis.length}
-          knowledgeBaseLength={knowledgeBase.length}
-        />
-      )}
-
-      {/* Botão Submit */}
-      <button
-        type="submit"
-        disabled={isGenerating}
-        className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-      >
-        {isGenerating ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>Gerando Roteiro...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles size={20} />
-            <span>Gerar Roteiro Completo</span>
-          </>
-        )}
-      </button>
-
-      {isGenerating && (
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-          Este processo pode levar 5-10 minutos. Por favor, aguarde...
-        </p>
-      )}
-    </form>
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 3s ease infinite;
+        }
+      `}</style>
+    </>
   );
 }

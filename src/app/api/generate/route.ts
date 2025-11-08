@@ -10,11 +10,15 @@ import {
   buildTituloPrompt,
 } from '@/lib/prompts';
 import {
+  buildEstruturaPrompt,
+  buildHookPrompt,
+  buildTopicoPrompt,
+  buildConclusaoPrompt,
+} from '@/lib/prompts-historia';
+import {
   validateRoteiro,
   validateTextoNarrado,
-  countWords,
   countCharacters,
-  extractSectionWordCounts,
 } from '@/lib/validators';
 import { ScriptInput, GeneratedScript } from '@/types';
 
@@ -91,33 +95,256 @@ export async function POST(request: NextRequest) {
         let personagens = '';
         let titulo = '';
 
-        // ETAPA 1: Gerar Roteiro Estruturado (PT)
-        sendEvent(controller, {
-          progress: 5,
-          message: 'Iniciando geração do roteiro estruturado...',
-          currentFile: 'roteiro',
-        });
+        // Check if it's story mode
+        if (input.mode === 'story') {
+          // ========== MODO HISTÓRIA: Usar prompts de história com TÓPICOS ==========
 
-        roteiro = await generateWithRotation(buildRoteiroPrompt(input), geminiKeys);
+          // ETAPA 1: Gerar Estrutura com TÓPICOS (não ATOS)
+          sendEvent(controller, {
+            progress: 5,
+            message: 'Criando estrutura da história com 3 tópicos...',
+            currentFile: 'roteiro',
+          });
 
-        // Rate limiting: aguarda 3s antes da próxima chamada (12 req = 36s, bem abaixo de 60s)
-        await new Promise(resolve => setTimeout(resolve, 3000));
+          const estrutura = await generateWithRotation(
+            buildEstruturaPrompt(input, input.language || 'pt'),
+            geminiKeys
+          );
 
-        sendEvent(controller, {
-          progress: 15,
-          message: 'Roteiro estruturado criado! Validando...',
-          currentFile: 'roteiro',
-          partialFile: {
-            type: 'roteiro',
-            content: roteiro,
-            generatedAt: new Date().toISOString(),
-            isComplete: true
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 10,
+            message: 'Estrutura criada! Gerando introdução...',
+            currentFile: 'roteiro',
+          });
+
+          // ETAPA 2: Gerar Hook/Introdução
+          const hook = await generateWithRotation(
+            buildHookPrompt(input, estrutura, input.language || 'pt'),
+            geminiKeys
+          );
+
+          roteiro = `${input.title.toUpperCase()} - ROTEIRO COMPLETO\n`;
+          roteiro += '='.repeat(60) + '\n\n';
+          roteiro += 'INTRODUÇÃO\n' + '-'.repeat(40) + '\n\n';
+          roteiro += hook + '\n\n';
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 15,
+            message: 'Introdução criada! Iniciando geração dos tópicos...',
+            currentFile: 'roteiro',
+          });
+
+          // ETAPA 3: Gerar os 3 TÓPICOS (não ATOS)
+          const topicosGerados = [];
+
+          // Extrair informações dos tópicos da estrutura
+          const topicPattern = /TÓPICO (\d+): ([^\n]+)\n((?:\d+\.\d+ [^\n]+\n)+)/g;
+          const topics = [];
+          let match;
+
+          while ((match = topicPattern.exec(estrutura)) !== null) {
+            const topicNumber = parseInt(match[1]);
+            const topicTitle = match[2];
+            const subtopicsText = match[3];
+            const subtopics = subtopicsText.split('\n')
+              .filter(line => line.trim())
+              .map(line => line.replace(/^\d+\.\d+\s+/, ''));
+
+            topics.push({ number: topicNumber, title: topicTitle, subtopics });
           }
-        });
 
-        if (!validateRoteiro(roteiro)) {
-          throw new Error('Roteiro gerado não contém todas as seções necessárias');
-        }
+          // Gerar cada tópico
+          const targetTotal = input.targetCharacters || 100000;
+          const targetPerTopic = Math.floor(targetTotal / 3);
+
+          for (const topic of topics) {
+            const progressBase = 20 + (topic.number - 1) * 20; // 20%, 40%, 60%
+
+            sendEvent(controller, {
+              progress: progressBase,
+              message: `Gerando TÓPICO ${topic.number}: ${topic.title} (meta: ~${targetPerTopic.toLocaleString()} caracteres)...`,
+              currentFile: 'roteiro',
+            });
+
+            const topicContent = await generateWithRotation(
+              buildTopicoPrompt(
+                topic.number,
+                topic.title,
+                topic.subtopics,
+                input,
+                input.language || 'pt',
+                topicosGerados
+              ),
+              geminiKeys
+            );
+
+            roteiro += `\nTÓPICO ${topic.number}: ${topic.title}\n` + '='.repeat(60) + '\n\n';
+            roteiro += topicContent + '\n\n';
+            topicosGerados.push(topicContent);
+
+            // Rate limiting
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            const charCount = countCharacters(topicContent);
+            sendEvent(controller, {
+              progress: progressBase + 15,
+              message: `TÓPICO ${topic.number} concluído (${charCount.toLocaleString()} caracteres)`,
+              currentFile: 'roteiro',
+              partialFile: {
+                type: 'roteiro',
+                content: roteiro,
+                generatedAt: new Date().toISOString(),
+                isComplete: false
+              }
+            });
+          }
+
+          // ETAPA 4: Gerar Conclusão/CTA
+          sendEvent(controller, {
+            progress: 80,
+            message: 'Gerando conclusão e chamada para ação...',
+            currentFile: 'roteiro',
+          });
+
+          const conclusao = await generateWithRotation(
+            buildConclusaoPrompt(input, input.language || 'pt'),
+            geminiKeys
+          );
+
+          roteiro += '\nCONCLUSÃO\n' + '='.repeat(60) + '\n\n';
+          roteiro += conclusao;
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 85,
+            message: 'Roteiro completo! Gerando arquivos complementares...',
+            currentFile: 'roteiro',
+            partialFile: {
+              type: 'roteiro',
+              content: roteiro,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          // Para modo história, vamos gerar os arquivos complementares
+
+          // ETAPA 5: Gerar Trilha Sonora
+          sendEvent(controller, {
+            progress: 88,
+            message: 'Criando direção de trilha sonora...',
+            currentFile: 'trilha',
+          });
+
+          trilha = await generateWithRotation(buildTrilhaPrompt(roteiro, input), geminiKeys);
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 90,
+            message: 'Trilha sonora definida!',
+            currentFile: 'trilha',
+            partialFile: {
+              type: 'trilha',
+              content: trilha,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          // ETAPA 6: Texto Narrado (para modo história é o próprio roteiro)
+          textoNarrado = `${input.title.toUpperCase()} - TEXTO NARRADO\n`;
+          textoNarrado += '='.repeat(60) + '\n\n';
+          textoNarrado += 'NOTA: Para modo história, o texto narrado segue a narrativa completa.\n\n';
+          textoNarrado += roteiro;
+
+          // ETAPA 7: Gerar Personagens
+          sendEvent(controller, {
+            progress: 92,
+            message: 'Criando descrições de personagens para IA...',
+            currentFile: 'personagens',
+          });
+
+          personagens = await generateWithRotation(buildPersonagensPrompt(roteiro, input), geminiKeys);
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 95,
+            message: 'Personagens descritos!',
+            currentFile: 'personagens',
+            partialFile: {
+              type: 'personagens',
+              content: personagens,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          // ETAPA 8: Gerar Títulos
+          sendEvent(controller, {
+            progress: 97,
+            message: 'Gerando títulos e descrição para YouTube...',
+            currentFile: 'titulo',
+          });
+
+          titulo = await generateWithRotation(buildTituloPrompt(roteiro, input), geminiKeys);
+
+          sendEvent(controller, {
+            progress: 99,
+            message: 'Títulos criados! Finalizando...',
+            currentFile: 'titulo',
+            partialFile: {
+              type: 'titulo',
+              content: titulo,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          // Calcular total de caracteres para modo história
+          const totalCharacters = countCharacters(textoNarrado);
+
+        } else {
+          // ========== MODO DOCUMENTÁRIO: Usar fluxo original com ATOS ==========
+
+          // ETAPA 1: Gerar Roteiro Estruturado (PT)
+          sendEvent(controller, {
+            progress: 5,
+            message: 'Iniciando geração do roteiro estruturado...',
+            currentFile: 'roteiro',
+          });
+
+          roteiro = await generateWithRotation(buildRoteiroPrompt(input), geminiKeys);
+
+          // Rate limiting: aguarda 3s antes da próxima chamada (12 req = 36s, bem abaixo de 60s)
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          sendEvent(controller, {
+            progress: 15,
+            message: 'Roteiro estruturado criado! Validando...',
+            currentFile: 'roteiro',
+            partialFile: {
+              type: 'roteiro',
+              content: roteiro,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          if (!validateRoteiro(roteiro)) {
+            throw new Error('Roteiro gerado não contém todas as seções necessárias');
+          }
 
         // ETAPA 2: Gerar Trilha Sonora (PT/EN)
         sendEvent(controller, {
@@ -158,7 +385,7 @@ export async function POST(request: NextRequest) {
 
         sendEvent(controller, {
           progress: 35,
-          message: `HOOK concluído (${countWords(hook)} palavras)`,
+          message: `HOOK concluído (${countCharacters(hook)} caracteres)`,
           currentFile: 'textoNarrado',
         });
 
@@ -175,7 +402,7 @@ export async function POST(request: NextRequest) {
         for (const act of acts) {
           sendEvent(controller, {
             progress: act.progress,
-            message: `Expandindo ATO ${act.num} (meta: 1000-1250 palavras)...`,
+            message: `Expandindo ATO ${act.num}...`,
             currentFile: 'textoNarrado',
           });
 
@@ -196,7 +423,7 @@ export async function POST(request: NextRequest) {
 
           sendEvent(controller, {
             progress: act.progress + 2,
-            message: `ATO ${act.num} concluído (${countWords(atoContent)} palavras)`,
+            message: `ATO ${act.num} concluído (${countCharacters(atoContent)} caracteres)`,
             currentFile: 'textoNarrado',
             partialFile: {
               type: 'textoNarrado',
@@ -222,7 +449,7 @@ export async function POST(request: NextRequest) {
 
         sendEvent(controller, {
           progress: 88,
-          message: `Conclusão concluída (${countWords(conclusao)} palavras)`,
+          message: `Conclusão concluída (${countCharacters(conclusao)} caracteres)`,
           currentFile: 'textoNarrado',
           partialFile: {
             type: 'textoNarrado',
@@ -233,16 +460,16 @@ export async function POST(request: NextRequest) {
         });
 
         // Validar texto narrado
-        const totalWords = countWords(textoNarrado);
         const totalCharacters = countCharacters(textoNarrado);
+        const targetMinDoc = input.targetCharacters || 30000;
         sendEvent(controller, {
           progress: 90,
-          message: `Texto narrado completo: ${totalWords.toLocaleString()} palavras, ${totalCharacters.toLocaleString()} caracteres. Validando...`,
+          message: `Texto narrado completo: ${totalCharacters.toLocaleString()} caracteres. Validando...`,
           currentFile: 'textoNarrado',
         });
 
-        if (totalWords < 8500) {
-          console.warn(`Aviso: Texto narrado tem apenas ${totalWords} palavras (mínimo: 8500)`);
+        if (totalCharacters < targetMinDoc * 0.8) {
+          console.warn(`Aviso: Texto narrado tem apenas ${totalCharacters} caracteres (mínimo: ${Math.floor(targetMinDoc * 0.8)})`);
         }
 
         // ETAPA 4: Gerar Personagens (EN)
@@ -278,22 +505,23 @@ export async function POST(request: NextRequest) {
 
         titulo = await generateWithRotation(buildTituloPrompt(roteiro, input), geminiKeys);
 
-        sendEvent(controller, {
-          progress: 99,
-          message: 'Títulos criados! Finalizando...',
-          currentFile: 'titulo',
-          partialFile: {
-            type: 'titulo',
-            content: titulo,
-            generatedAt: new Date().toISOString(),
-            isComplete: true
-          }
-        });
+          sendEvent(controller, {
+            progress: 99,
+            message: 'Títulos criados! Finalizando...',
+            currentFile: 'titulo',
+            partialFile: {
+              type: 'titulo',
+              content: titulo,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+        } // Fim do else para modo documentário
 
-        // Extrair contagem por seção
-        const sectionCounts = extractSectionWordCounts(textoNarrado);
+        // Resultado final - validar baseado em caracteres
+        const targetMinimum = input.targetCharacters ? input.targetCharacters * 0.8 : (input.mode === 'story' ? 80000 : 24000);
+        const validated = totalCharacters >= targetMinimum;
 
-        // Resultado final
         const result: GeneratedScript & { stats: any } = {
           roteiro,
           trilha,
@@ -301,17 +529,16 @@ export async function POST(request: NextRequest) {
           personagens,
           titulo,
           stats: {
-            totalWords: totalWords,
             totalCharacters: totalCharacters,
-            sectionWords: sectionCounts,
-            validated: totalWords >= 8500,
+            validated: validated,
+            mode: input.mode,
           },
         };
 
         // Aguardar um pouco antes do evento final para garantir que tudo foi processado
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // ⚠️ NÃO enviar 'result' completo aqui - é muito grande (~20k+ palavras) e corta o SSE
+        // ⚠️ NÃO enviar 'result' completo aqui - é muito grande e corta o SSE
         // O frontend já recebeu todos os arquivos via partialFile nos eventos anteriores
         // Enviamos apenas estatísticas e o sinal de conclusão
         sendEvent(controller, {
@@ -319,10 +546,9 @@ export async function POST(request: NextRequest) {
           message: '✓ Roteiro completo gerado com sucesso!',
           complete: true,
           stats: {
-            totalWords: totalWords,
             totalCharacters: totalCharacters,
-            sectionWords: sectionCounts,
-            validated: totalWords >= 8500,
+            validated: validated,
+            mode: input.mode,
           }
         });
 
