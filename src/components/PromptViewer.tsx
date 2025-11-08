@@ -160,7 +160,7 @@ TÓPICO 3: A Conclusão
       title: '3.2 Texto Narrado - Atos',
       icon: <BookOpen className="w-5 h-5" />,
       description: 'O desenvolvimento da história dividido em 3 atos principais.',
-      getPrompt: (input) => buildTextoNarradoAtoPrompt(exampleRoteiro, 1, 'Exemplo', '10:00-20:00', input.language || 'pt'),
+      getPrompt: (input) => buildTextoNarradoAtoPrompt(exampleRoteiro, 1, 'Exemplo', '10:00-20:00', input.language === 'es' ? 'es' : 'en'),
       color: 'green'
     },
     {
@@ -168,7 +168,7 @@ TÓPICO 3: A Conclusão
       title: '3.3 Texto Narrado - Conclusão',
       icon: <BookOpen className="w-5 h-5" />,
       description: 'O fechamento do vídeo com call-to-action.',
-      getPrompt: (input) => buildTextoNarradoConclusaoPrompt(exampleRoteiro, input.language || 'pt'),
+      getPrompt: (input) => buildTextoNarradoConclusaoPrompt(exampleRoteiro, input.language === 'es' ? 'es' : 'en'),
       color: 'green'
     },
     {
@@ -184,7 +184,7 @@ TÓPICO 3: A Conclusão
       title: '5. Título e SEO',
       icon: <Type className="w-5 h-5" />,
       description: 'Título otimizado para YouTube, descrição e tags para melhor alcance.',
-      getPrompt: (input) => buildTituloPrompt(exampleRoteiro, input, input.language || 'pt'),
+      getPrompt: (input) => buildTituloPrompt(exampleRoteiro, input, input.language === 'es' ? 'es' : 'en'),
       color: 'pink'
     }
   ];
