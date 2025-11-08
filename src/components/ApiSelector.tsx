@@ -8,9 +8,10 @@ interface ApiSelectorProps {
   apiKeys: ApiKeys;
   selectedApi: ApiSelection | null;
   onChange: (selection: ApiSelection) => void;
+  disabled?: boolean;
 }
 
-export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelectorProps) {
+export default function ApiSelector({ apiKeys, selectedApi, onChange, disabled }: ApiSelectorProps) {
   // Gerar lista de PROVIDERS (empresas) disponíveis - não APIs individuais
   const getAvailableProviders = (): ApiSelection[] => {
     const providers: ApiSelection[] = [];
@@ -172,6 +173,7 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange }: ApiSelec
         onChange={(e) => handleChange(e.target.value)}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-all"
         required
+        disabled={disabled}
       >
         {availableProviders.map((provider, index) => (
           <option key={index} value={JSON.stringify(provider)}>
