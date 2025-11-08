@@ -179,7 +179,7 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">IA Configurada</p>
                   <p className="font-semibold text-sm text-green-600 dark:text-green-400 mt-1">
-                    Gemini (3 APIs)
+                    {selectedApi?.label || 'Nenhuma API selecionada'}
                   </p>
                 </div>
               </div>

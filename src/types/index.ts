@@ -100,6 +100,7 @@ export interface GeneratedScript {
   textoNarrado: string;
   personagens: string;
   titulo: string;
+  takes?: string;
 }
 
 // Arquivo parcial gerado (para download progressivo)
@@ -118,4 +119,4 @@ export interface ProgressUpdate {
   partialFile?: PartialFile; // Arquivo parcial disponível para download
 }
 
-export type FileType = 'roteiro' | 'trilha' | 'textoNarrado' | 'personagens' | 'titulo';
+export type FileType = 'roteiro' | 'trilha' | 'textoNarrado' | 'personagens' | 'titulo' | 'takes';

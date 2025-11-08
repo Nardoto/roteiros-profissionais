@@ -31,6 +31,9 @@ export default function DownloadButtons({ scripts, title }: DownloadButtonsProps
     zip.file(`${folderName}/03_Texto_Narrado.txt`, scripts.textoNarrado);
     zip.file(`${folderName}/04_Personagens_Descricoes.txt`, scripts.personagens);
     zip.file(`${folderName}/05_Titulo_Descricao.txt`, scripts.titulo);
+    if (scripts.takes) {
+      zip.file(`${folderName}/06_Takes_Cenas_Visuais.txt`, scripts.takes);
+    }
 
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
@@ -49,6 +52,7 @@ export default function DownloadButtons({ scripts, title }: DownloadButtonsProps
     { key: 'textoNarrado', name: '03_Texto_Narrado.txt', content: scripts.textoNarrado },
     { key: 'personagens', name: '04_Personagens_Descricoes.txt', content: scripts.personagens },
     { key: 'titulo', name: '05_Titulo_Descricao.txt', content: scripts.titulo },
+    ...(scripts.takes ? [{ key: 'takes', name: '06_Takes_Cenas_Visuais.txt', content: scripts.takes }] : []),
   ];
 
   return (

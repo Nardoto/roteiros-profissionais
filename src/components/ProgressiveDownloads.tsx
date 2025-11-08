@@ -15,6 +15,7 @@ export default function ProgressiveDownloads({ partialFiles, title }: Progressiv
     textoNarrado: '03_Texto_Narrado.txt',
     personagens: '04_Personagens_Descricoes.txt',
     titulo: '05_Titulo_Descricao.txt',
+    takes: '06_Takes_Cenas_Visuais.txt',
   };
 
   const fileLabels: Record<string, string> = {
@@ -23,6 +24,7 @@ export default function ProgressiveDownloads({ partialFiles, title }: Progressiv
     textoNarrado: 'Texto Narrado (EN)',
     personagens: 'Personagens (EN)',
     titulo: 'Título e Descrição (PT)',
+    takes: 'Takes - Cenas Visuais (EN)',
   };
 
   const downloadFile = (fileType: string) => {

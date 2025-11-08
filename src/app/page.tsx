@@ -215,11 +215,12 @@ export default function Home() {
 
             {/* Lista de arquivos compacta */}
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1 text-sm">📦 5 Arquivos:</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1 text-sm">📦 Arquivos:</h3>
               <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-0.5">
                 <li>• Roteiro (PT) • Trilha (PT/EN)</li>
                 <li>• Texto Narrado (EN, 8500+ palavras)</li>
                 <li>• Personagens (EN) • Título (PT)</li>
+                <li>• Takes/Cenas Visuais (modo história)</li>
               </ul>
             </div>
 

@@ -14,6 +14,7 @@ import {
   buildHookPrompt,
   buildTopicoPrompt,
   buildConclusaoPrompt,
+  buildTakesPrompt,
 } from '@/lib/prompts-historia';
 import {
   validateRoteiro,
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
         let textoNarrado = '';
         let personagens = '';
         let titulo = '';
+        let takes = '';
         let totalCharacters = 0;
 
         // Check if it's story mode
@@ -302,12 +304,36 @@ export async function POST(request: NextRequest) {
           titulo = await generateWithRotation(buildTituloPrompt(roteiro, input), geminiKeys);
 
           sendEvent(controller, {
-            progress: 99,
-            message: 'Títulos criados! Finalizando...',
+            progress: 98,
+            message: 'Títulos criados!',
             currentFile: 'titulo',
             partialFile: {
               type: 'titulo',
               content: titulo,
+              generatedAt: new Date().toISOString(),
+              isComplete: true
+            }
+          });
+
+          // ETAPA 9: Gerar TAKES (Divisão em cenas visuais)
+          sendEvent(controller, {
+            progress: 99,
+            message: 'Criando TAKES para geração de imagens/vídeos...',
+            currentFile: 'takes',
+          });
+
+          takes = await generateWithRotation(
+            buildTakesPrompt(textoNarrado, personagens, input.language),
+            geminiKeys
+          );
+
+          sendEvent(controller, {
+            progress: 99.5,
+            message: 'TAKES criados! Finalizando...',
+            currentFile: 'takes',
+            partialFile: {
+              type: 'takes',
+              content: takes,
               generatedAt: new Date().toISOString(),
               isComplete: true
             }
@@ -530,6 +556,7 @@ export async function POST(request: NextRequest) {
           textoNarrado,
           personagens,
           titulo,
+          takes,
           stats: {
             totalCharacters: totalCharacters,
             validated: validated,
