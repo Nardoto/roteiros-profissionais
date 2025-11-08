@@ -61,9 +61,9 @@ export default function ScriptModeSelector({ selectedMode, onChange }: ScriptMod
         {/* Modo História de Personagens */}
         <button
           type="button"
-          onClick={() => onChange('character')}
+          onClick={() => onChange('story')}
           className={`p-4 rounded-lg border-2 transition-all ${
-            selectedMode === 'character'
+            selectedMode === 'story'
               ? 'border-secondary bg-secondary/5 dark:bg-secondary/10'
               : 'border-gray-300 dark:border-gray-600 hover:border-secondary/50'
           }`}
@@ -71,10 +71,10 @@ export default function ScriptModeSelector({ selectedMode, onChange }: ScriptMod
           <div className="flex flex-col items-center gap-2">
             <Users
               size={32}
-              className={selectedMode === 'character' ? 'text-secondary' : 'text-gray-500'}
+              className={selectedMode === 'story' ? 'text-secondary' : 'text-gray-500'}
             />
             <div className="text-center">
-              <p className={`font-semibold ${selectedMode === 'character' ? 'text-secondary' : 'text-gray-700 dark:text-gray-300'}`}>
+              <p className={`font-semibold ${selectedMode === 'story' ? 'text-secondary' : 'text-gray-700 dark:text-gray-300'}`}>
                 História de Personagem
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
