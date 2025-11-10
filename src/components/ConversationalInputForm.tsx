@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Sparkles, Clock, Zap, MessageSquare, Edit2, Plus, Upload, Download, Trash2 } from 'lucide-react';
+import { BookOpen, Sparkles, Clock, Zap, MessageSquare, Edit2, Plus, Upload, Download, Trash2, ChevronDown } from 'lucide-react';
 import { ConversationalInput } from '@/types/conversation';
 import { ALL_UNIVERSAL_TEMPLATES } from '@/lib/universal-templates';
 import { UniversalTemplate } from '@/types/universal-template';
@@ -46,6 +46,7 @@ export default function ConversationalInputForm({ onSubmit, isGenerating }: Conv
     perplexity: undefined,
   });
   const [claudeModel, setClaudeModel] = useState<'haiku' | 'sonnet' | 'opus'>('sonnet');
+  const [isClaudeModelExpanded, setIsClaudeModelExpanded] = useState(false);
 
   // Estimativa de tempo
   const [videoTimeEstimate, setVideoTimeEstimate] = useState(calculateVideoTime(60000));
@@ -576,24 +577,10 @@ export default function ConversationalInputForm({ onSubmit, isGenerating }: Conv
         />
 
         {/* Estimativa de tempo */}
-        <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ⏱️ Estimativa de Duração:
+        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+          <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400">
+            ⏱️ Duração estimada: <span className="font-semibold text-gray-900 dark:text-gray-100">{videoTimeEstimate.medium.duration}</span> <span className="text-[9px]">({videoTimeEstimate.slow.duration} ~ {videoTimeEstimate.fast.duration})</span>
           </p>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="text-center">
-              <div className="font-bold text-green-600 dark:text-green-400">{videoTimeEstimate.slow.duration}</div>
-              <div className="text-gray-600 dark:text-gray-400">Voz Lenta</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-blue-600 dark:text-blue-400">{videoTimeEstimate.medium.duration}</div>
-              <div className="text-gray-600 dark:text-gray-400">Voz Média</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-purple-600 dark:text-purple-400">{videoTimeEstimate.fast.duration}</div>
-              <div className="text-gray-600 dark:text-gray-400">Voz Rápida</div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -614,48 +601,61 @@ export default function ConversationalInputForm({ onSubmit, isGenerating }: Conv
         disabled={isGenerating}
       />
 
-      {/* ========== MODELO CLAUDE ========== */}
+      {/* ========== MODELO CLAUDE (DROPDOWN) ========== */}
       {selectedApi?.provider === 'anthropic' && (
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsClaudeModelExpanded(!isClaudeModelExpanded)}
+            className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span>Modelo Claude *</span>
+              <Sparkles className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+              <span className="text-sm font-semibold">Modelo Claude *</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">({claudeModel === 'haiku' ? 'Haiku 4.5' : claudeModel === 'sonnet' ? 'Sonnet 4.5' : 'Opus 4.1'})</span>
             </div>
-          </label>
+            <ChevronDown
+              size={18}
+              className={`text-gray-600 dark:text-gray-400 transition-transform duration-200 ${isClaudeModelExpanded ? 'rotate-180' : ''}`}
+            />
+          </button>
 
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: 'haiku', name: 'Haiku 4.5', cost: '$0.30' },
-              { id: 'sonnet', name: 'Sonnet 4.5', cost: '$0.50' },
-              { id: 'opus', name: 'Opus 4.1', cost: '$1.00' },
-            ].map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                onClick={() => setClaudeModel(model.id as any)}
-                className={`px-3 py-2 text-xs font-medium rounded-lg transition-all border ${
-                  claudeModel === model.id
-                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-                disabled={isGenerating}
-              >
-                <div className="font-bold">{model.name}</div>
-                <div className="text-[10px] mt-0.5 opacity-70">{model.cost}</div>
-              </button>
-            ))}
+          <div className={`transition-all duration-300 ease-in-out ${isClaudeModelExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+            <div className="p-3 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'haiku', name: 'Haiku 4.5', cost: '$0.30' },
+                  { id: 'sonnet', name: 'Sonnet 4.5', cost: '$0.50' },
+                  { id: 'opus', name: 'Opus 4.1', cost: '$1.00' },
+                ].map((model) => (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => setClaudeModel(model.id as any)}
+                    className={`px-3 py-2 text-xs font-medium rounded-lg transition-all border ${
+                      claudeModel === model.id
+                        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                    disabled={isGenerating}
+                  >
+                    <div className="font-bold">{model.name}</div>
+                    <div className="text-[10px] mt-0.5 opacity-70">{model.cost}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Aviso Haiku */}
+              {claudeModel === 'haiku' && (
+                <div className="p-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    ⚡ <strong>Haiku:</strong> Mais rápido e barato, mas pode demorar 40-60s por tópico em roteiros longos.
+                    O sistema reduzirá automaticamente o tamanho para 60% do solicitado.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-
-          {/* Aviso Haiku */}
-          {claudeModel === 'haiku' && (
-            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
-              <p className="text-xs text-gray-700 dark:text-gray-300">
-                ⚡ <strong>Haiku:</strong> Mais rápido e barato, mas pode demorar 40-60s por tópico em roteiros longos.
-                O sistema reduzirá automaticamente o tamanho para 60% do solicitado.
-              </p>
-            </div>
-          )}
         </div>
       )}
 
