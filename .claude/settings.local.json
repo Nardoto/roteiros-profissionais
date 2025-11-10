@@ -21,7 +21,16 @@
       "Bash(npm run dev:*)",
       "Bash(taskkill:*)",
       "Bash(curl:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(vercel --version:*)",
+      "Bash(vercel login)",
+      "Bash(vercel:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc:*)",
+      "Bash(netstat:*)",
+      "Bash(timeout /t 10)",
+      "Bash(nul)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

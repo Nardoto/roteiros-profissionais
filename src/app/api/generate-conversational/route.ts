@@ -171,7 +171,15 @@ export async function POST(request: NextRequest) {
           if (step.id === 'topico' || step.id === 'curiosidade' || step.id === 'ato') {
             // Extrair cada tópico da estrutura gerada
             // REGEX MULTILÍNGUE: Aceita "Tópico", "TÓPICO", "Topic", "TOPIC", "Topico"
-            const topicos = estruturaGerada.split(/T[oó]pico? \d+:/i).filter(t => t.trim());
+            const topicosRaw = estruturaGerada.split(/T[oó]pico? \d+:/i);
+
+            // Remover elementos vazios (primeiro elemento após split quando estrutura começa com "TÓPICO 1:")
+            const topicos = topicosRaw.filter(t => t.trim().length > 0);
+
+            console.log(`🔍 DEBUG - Estrutura split em ${topicos.length} tópicos`);
+            if (topicos[0]) {
+              console.log(`🔍 DEBUG - Primeiros 100 chars do tópico 1:`, topicos[0].substring(0, 100));
+            }
 
             // Se estiver retomando, determinar de qual tópico começar
             const topicosJaGerados = resumeFrom?.generatedFiles.topicos?.length || 0;
@@ -180,14 +188,24 @@ export async function POST(request: NextRequest) {
             for (let topicoNum = startTopicoNum; topicoNum <= input.numTopics; topicoNum++) {
               console.log(`\n📌 Executando: ${step.name} ${topicoNum}/${input.numTopics}`);
 
-              // Pegar a estrutura real deste tópico
-              const topicoEstrutura = topicos[topicoNum - 1] || `Tópico ${topicoNum} (estrutura não encontrada)`;
+              // Pegar a estrutura real deste tópico (índice correto: topicoNum - 1)
+              const topicoEstrutura = topicos[topicoNum - 1];
+
+              if (!topicoEstrutura || topicoEstrutura.trim().length === 0) {
+                console.error(`❌ ERRO: Tópico ${topicoNum} não encontrado!`);
+                console.error(`📋 Total de tópicos extraídos: ${topicos.length}`);
+                console.error(`📋 Estrutura completa (primeiros 500 chars):`, estruturaGerada.substring(0, 500));
+                throw new Error(`Tópico ${topicoNum} não encontrado na estrutura gerada. Verifique se a IA gerou ${input.numTopics} tópicos corretamente.`);
+              }
+
+              console.log(`📝 Tópico ${topicoNum} extraído (primeiros 150 chars):`, topicoEstrutura.substring(0, 150));
 
               // Montar prompt para este tópico específico
+              // NÃO adicionar "Tópico X:" novamente, pois já está no template original
               let promptText = replaceVariables(step.promptTemplate, {
                 ...variables,
                 TOPICO_NUM: topicoNum,
-                TOPICO_ESTRUTURA: `Tópico ${topicoNum}:\n${topicoEstrutura.trim()}`,
+                TOPICO_ESTRUTURA: topicoEstrutura.trim(),
               });
 
               // Criar mensagem do usuário
