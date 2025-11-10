@@ -77,13 +77,21 @@ export default function Home() {
         throw new Error('Não foi possível ler a resposta');
       }
 
+      let buffer = ''; // Buffer para acumular chunks incompletos
+
       while (true) {
         const { done, value } = await reader.read();
 
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        // Adicionar novo chunk ao buffer
+        buffer += decoder.decode(value, { stream: true });
+
+        // Processar apenas linhas completas (terminadas com \n)
+        const lines = buffer.split('\n');
+
+        // Última linha pode estar incompleta, manter no buffer
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
@@ -121,7 +129,8 @@ export default function Home() {
                 console.warn('⚠️ Evento desconhecido:', data.type, data);
               }
             } catch (parseError) {
-              console.warn('Chunk JSON incompleto, ignorando:', parseError);
+              console.error('❌ Erro ao fazer parse do SSE:', parseError);
+              console.error('Linha problemática:', line);
             }
           }
         }
