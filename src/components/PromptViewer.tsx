@@ -117,7 +117,8 @@ TÓPICO 3: A Conclusão
         'O Início',
         ['Subtópico 1', 'Subtópico 2', 'Subtópico 3', 'Subtópico 4', 'Subtópico 5', 'Subtópico 6', 'Subtópico 7', 'Subtópico 8'],
         input,
-        input.language || 'pt'
+        input.language || 'pt',
+        []
       ),
       color: 'blue'
     },

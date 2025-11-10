@@ -1,85 +1,73 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import InputForm from '@/components/InputForm';
-import ProgressBar from '@/components/ProgressBar';
-import DownloadButtons from '@/components/DownloadButtons';
-import ProgressiveDownloads from '@/components/ProgressiveDownloads';
-import Footer from '@/components/Footer';
-import { ScriptInput, GeneratedScript, ProgressUpdate, PartialFile } from '@/types';
-import { BookOpen, Sparkles } from 'lucide-react';
+import { MessageSquare, Download, FileText, Clock } from 'lucide-react';
+import ConversationalInputForm from '@/components/ConversationalInputForm';
+import ConversationView from '@/components/ConversationView';
+import { ConversationalInput, ConversationMessage, Conversation } from '@/types/conversation';
+import { calculateVideoTime } from '@/lib/time-calculator';
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState<ProgressUpdate>({ progress: 0, message: '' });
-  const [generatedScripts, setGeneratedScripts] = useState<GeneratedScript | null>(null);
-  const [partialFiles, setPartialFiles] = useState<Record<string, PartialFile>>({});
-  const [currentInput, setCurrentInput] = useState<ScriptInput | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [currentStep, setCurrentStep] = useState<string>('');
+  const [completedConversation, setCompletedConversation] = useState<Conversation | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [lastInput, setLastInput] = useState<ConversationalInput | null>(null);
+  const [isCancelled, setIsCancelled] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Limpar timer quando componente desmontar
+  // Timer para mostrar tempo decorrido
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
+
     return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
+      if (interval) clearInterval(interval);
     };
-  }, [timerInterval]);
+  }, [isGenerating, startTime]);
 
-  // Função para formatar tempo decorrido
-  const formatElapsedTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Função para iniciar o timer
-  const startTimer = () => {
-    const start = Date.now();
-    setStartTime(start);
+  const handleGenerate = async (input: ConversationalInput, resume: boolean = false) => {
+    setIsGenerating(true);
+    setIsCancelled(false);
+    setStartTime(Date.now());
     setElapsedTime(0);
 
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - start) / 1000);
-      setElapsedTime(elapsed);
-    }, 1000);
-
-    setTimerInterval(interval);
-  };
-
-  // Função para parar o timer
-  const stopTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
+    // Se não está retomando, limpar estado anterior
+    if (!resume) {
+      setMessages([]);
+      setCompletedConversation(null);
+      setProgress(0);
     }
-  };
 
-  const handleGenerate = async (input: ScriptInput) => {
-    setIsGenerating(true);
-    setProgress({ progress: 0, message: 'Iniciando geração...' });
-    setGeneratedScripts(null);
-    setPartialFiles({});
-    setCurrentInput(input);
-    setError(null);
+    setLastInput(input);
 
-    // Iniciar timer
-    startTimer();
+    // Criar AbortController para poder cancelar
+    const controller = new AbortController();
+    setAbortController(controller);
 
     try {
-      const response = await fetch('/api/generate', {
+      const response = await fetch('/api/generate-universal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify({
+          ...input,
+          resumeFrom: resume && completedConversation ? completedConversation : undefined,
+        }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao gerar roteiro');
+        throw new Error('Erro ao gerar roteiro conversacional');
       }
 
       const reader = response.body?.getReader();
@@ -102,214 +90,522 @@ export default function Home() {
             try {
               const data = JSON.parse(line.slice(6));
 
-              if (data.error) {
-              setError(data.message);
-              setIsGenerating(false);
-              stopTimer();
-              return;
-            }
+              if (data.type === 'message') {
+                // Nova mensagem
+                setMessages((prev) => [...prev, data.message]);
+                setCurrentStep(data.currentStep || '');
+                setProgress(data.progress || 0);
+                console.log('📨 Mensagem recebida:', data.currentStep, `${data.progress}%`);
+              } else if (data.type === 'complete') {
+                // Concluído
+                console.log('✅ EVENTO COMPLETE RECEBIDO!', data.conversation);
 
-            if (data.complete) {
-              // Usar callback setPartialFiles para garantir que temos o estado mais recente
-              setPartialFiles(currentPartialFiles => {
-                // Construir o resultado final a partir dos partialFiles mais recentes
-                const finalResult: GeneratedScript & { stats: any } = {
-                  roteiro: currentPartialFiles.roteiro?.content || '',
-                  trilha: currentPartialFiles.trilha?.content || '',
-                  textoNarrado: currentPartialFiles.textoNarrado?.content || '',
-                  personagens: currentPartialFiles.personagens?.content || '',
-                  titulo: currentPartialFiles.titulo?.content || '',
-                  stats: data.stats || {}
+                // Convert ISO strings back to Date objects
+                const conversation = {
+                  ...data.conversation,
+                  createdAt: new Date(data.conversation.createdAt),
+                  messages: data.conversation.messages.map((m: any) => ({
+                    ...m,
+                    timestamp: new Date(m.timestamp),
+                  })),
                 };
 
-                setGeneratedScripts(finalResult);
-                return currentPartialFiles; // Retornar o mesmo estado
-              });
-              // Usar o elapsedTime que já foi atualizado durante todo o processo
-              const totalTime = elapsedTime || Math.floor((Date.now() - startTime) / 1000);
-              const timeMessage = totalTime >= 60
-                ? `${Math.floor(totalTime / 60)} minuto${Math.floor(totalTime / 60) !== 1 ? 's' : ''} e ${totalTime % 60} segundo${totalTime % 60 !== 1 ? 's' : ''}`
-                : `${totalTime} segundo${totalTime !== 1 ? 's' : ''}`;
-              setProgress({ progress: 100, message: `✓ Concluído em ${timeMessage}!` });
-              setIsGenerating(false);
-              stopTimer();
-            } else {
-              setProgress({
-                progress: data.progress,
-                message: data.message,
-                currentFile: data.currentFile,
-              });
-
-              // Processar arquivo parcial se houver
-              if (data.partialFile) {
-                setPartialFiles(prev => ({
-                  ...prev,
-                  [data.partialFile.type]: data.partialFile
-                }));
+                setCompletedConversation(conversation);
+                setIsGenerating(false);
+                setProgress(100);
+              } else if (data.type === 'error') {
+                console.error('❌ Erro:', data.error);
+                alert(`Erro: ${data.error}`);
+                setIsGenerating(false);
+              } else {
+                console.warn('⚠️ Evento desconhecido:', data.type, data);
               }
-            }
             } catch (parseError) {
-              // Ignora erros de parsing de JSON incompleto (chunks cortados)
               console.warn('Chunk JSON incompleto, ignorando:', parseError);
             }
           }
         }
       }
     } catch (err: any) {
+      // Se foi cancelado pelo usuário, não mostrar erro
+      if (err.name === 'AbortError') {
+        console.log('Geração cancelada pelo usuário');
+        setIsCancelled(true);
+        setIsGenerating(false);
+        return;
+      }
+
       console.error('Erro:', err);
-      setError(err.message || 'Erro desconhecido ao gerar roteiro');
+      alert(`Erro: ${err.message}`);
       setIsGenerating(false);
-      stopTimer();
     }
   };
 
+  // Função para cancelar a geração
+  const handleCancel = () => {
+    if (abortController) {
+      abortController.abort();
+      setIsGenerating(false);
+      setIsCancelled(true);
+    }
+  };
+
+  // Função para continuar de onde parou
+  const handleResume = () => {
+    if (lastInput) {
+      handleGenerate(lastInput, true);
+    }
+  };
+
+  // Download de arquivo
+  const downloadFile = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto">
-        {/* Header compacto */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-            Criado por <span className="font-semibold text-primary">Nardoto</span>
-          </p>
           <div className="flex items-center justify-center gap-2 mb-2">
-            <BookOpen size={28} className="text-primary" />
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Gerador de Roteiros Bíblicos
+            <MessageSquare size={32} className="text-primary" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Gerador Conversacional
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto">
-            Roteiros profissionais para documentários bíblicos com IA • 5 arquivos em minutos
+          <p className="text-gray-600 dark:text-gray-400 text-sm max-w-2xl mx-auto">
+            Sistema que simula o uso manual do Claude • Usa contexto conversacional • Templates personalizáveis
           </p>
         </div>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column - Input Form */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-2 mb-6">
-              <Sparkles className="text-primary" size={24} />
-              <h2 className="text-2xl font-bold">Configurar Roteiro</h2>
-            </div>
-            <InputForm onSubmit={handleGenerate} isGenerating={isGenerating} />
+        {/* Main Grid */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Coluna Esquerda: Input Form */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <FileText className="text-primary" size={24} />
+              Configuração
+            </h2>
+            <ConversationalInputForm onSubmit={handleGenerate} isGenerating={isGenerating} />
           </div>
 
-          {/* Right Column - Info/Status/Results */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
-            <h2 className="text-xl font-bold mb-4">📚 Como Funciona</h2>
-
-            {/* Instruções compactas */}
-            <div className="space-y-2 text-gray-700 dark:text-gray-300 mb-4">
-              <div className="flex gap-2 items-center">
-                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">1</span>
-                <p className="text-xs">Preencha título e sinopse</p>
-              </div>
-              <div className="flex gap-2 items-center">
-                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">2</span>
-                <p className="text-xs">Aguarde geração (5-10 min)</p>
-              </div>
-              <div className="flex gap-2 items-center">
-                <span className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs">3</span>
-                <p className="text-xs">Baixe os arquivos</p>
-              </div>
-            </div>
-
-            {/* Lista de arquivos compacta */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1 text-sm">📦 Arquivos:</h3>
-              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-0.5">
-                <li>• Roteiro (PT) • Trilha (PT/EN)</li>
-                <li>• Texto Narrado (EN, 8500+ palavras)</li>
-                <li>• Personagens (EN) • Título (PT)</li>
-                <li>• Takes/Cenas Visuais (modo história)</li>
-              </ul>
-            </div>
-
-            {/* Progress Bar */}
-            {(isGenerating || generatedScripts) && (
-              <div className="mt-4">
-                <ProgressBar
-                  progress={progress.progress}
-                  message={progress.message}
-                  currentFile={progress.currentFile}
-                  elapsedTime={elapsedTime}
-                  formatElapsedTime={formatElapsedTime}
-                />
-              </div>
-            )}
-
-            {/* Progressive Downloads */}
-            {currentInput && Object.keys(partialFiles).length > 0 && (
-              <div className="mt-4">
-                <ProgressiveDownloads partialFiles={partialFiles} title={currentInput.title} />
-              </div>
-            )}
-
-            {/* Downloads finais */}
-            {generatedScripts && currentInput && (
-              <div className="mt-4 space-y-4">
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                    📥 Downloads
-                  </h3>
-                  <DownloadButtons scripts={generatedScripts} title={currentInput.title} />
-                </div>
-
-                {/* Stats */}
-                {(generatedScripts as any).stats && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h3 className="text-lg font-bold mb-3">📊 Estatísticas</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Palavras</p>
-                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                          {(generatedScripts as any).stats.totalWords.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Meta: 8.500+</p>
-                      </div>
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Caracteres</p>
-                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          {(generatedScripts as any).stats.totalCharacters?.toLocaleString() || 'N/A'}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sem espaços</p>
-                      </div>
-                    </div>
-                    <div className="mt-2 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Status</p>
-                      <p className="text-base font-bold text-purple-600 dark:text-purple-400">
-                        {(generatedScripts as any).stats.validated ? '✓ Válido (Meta atingida)' : '⚠ Revisar (Abaixo da meta)'}
-                      </p>
-                    </div>
-                    {!(generatedScripts as any).stats.validated && (
-                      <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                          <strong>💡 Como revisar:</strong> O texto narrado tem menos de 8.500 palavras.
-                          Para atingir a meta, você pode:
-                        </p>
-                        <ul className="text-xs text-yellow-700 dark:text-yellow-400 mt-1 space-y-0.5 ml-4">
-                          <li>• Adicionar mais detalhes na sinopse</li>
-                          <li>• Usar a base de conhecimento</li>
-                          <li>• Gerar novamente com contexto adicional</li>
-                        </ul>
-                      </div>
+          {/* Coluna Direita: Conversa + Downloads */}
+          <div className="space-y-6">
+            {/* Progress */}
+            {(isGenerating || completedConversation || isCancelled) && (
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {isGenerating ? 'Gerando...' : isCancelled ? '⏸️ Pausado' : '✓ Concluído'}
+                    </span>
+                    {isGenerating && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <Clock size={12} />
+                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                      </span>
                     )}
                   </div>
+                  <span className="text-sm font-bold text-primary">{Math.round(progress)}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                {/* Botões de controle */}
+                {isGenerating && (
+                  <button
+                    onClick={handleCancel}
+                    className="mt-3 w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    ⏹️ Cancelar Geração
+                  </button>
+                )}
+
+                {isCancelled && !isGenerating && (
+                  <button
+                    onClick={handleResume}
+                    className="mt-3 w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    ▶️ Continuar de Onde Parou
+                  </button>
                 )}
               </div>
             )}
+
+            {/* Conversa */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
+              <ConversationView
+                messages={messages}
+                currentStep={currentStep}
+                isGenerating={isGenerating}
+              />
+            </div>
+
+            {/* Downloads */}
+            {completedConversation && (
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Download className="text-green-600" size={24} />
+                  Arquivos Gerados
+                </h2>
+
+                <div className="space-y-3">
+                  {/* Roteiro Completo (PRINCIPAL - TTS-ready) */}
+                  <button
+                    onClick={() => {
+                      const fullScript = [
+                        completedConversation.generatedFiles.hook || '',
+                        ...(completedConversation.generatedFiles.topicos || []),
+                      ]
+                        .filter((s) => s.trim())
+                        .join('\n\n');
+                      downloadFile('01_Roteiro_Completo.txt', fullScript);
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                  >
+                    <span>📝 Roteiro Completo (TTS-ready)</span>
+                    <Download size={18} />
+                  </button>
+
+                  {/* Estrutura (Referência) */}
+                  {completedConversation.generatedFiles.estrutura && (
+                    <button
+                      onClick={() =>
+                        downloadFile(
+                          '00_Estrutura.txt',
+                          completedConversation.generatedFiles.estrutura!
+                        )
+                      }
+                      className="w-full px-4 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all flex items-center justify-between"
+                    >
+                      <span className="font-medium">📋 Estrutura (Referência)</span>
+                      <Download size={18} />
+                    </button>
+                  )}
+
+                  {/* Tópicos Individuais */}
+                  {completedConversation.generatedFiles.topicos?.map((topico, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => downloadFile(`03_Topico_${idx + 1}.txt`, topico)}
+                      className="w-full px-4 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-all flex items-center justify-between"
+                    >
+                      <span className="font-medium">📖 Tópico {idx + 1}</span>
+                      <Download size={18} />
+                    </button>
+                  ))}
+
+                  {/* Personagens */}
+                  {completedConversation.generatedFiles.personagens && (
+                    <button
+                      onClick={() =>
+                        downloadFile('04_Personagens.txt', completedConversation.generatedFiles.personagens!)
+                      }
+                      className="w-full px-4 py-3 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all flex items-center justify-between"
+                    >
+                      <span className="font-medium">👥 Personagens</span>
+                      <Download size={18} />
+                    </button>
+                  )}
+
+                  {/* Trilha Sonora */}
+                  {completedConversation.generatedFiles.trilha && (
+                    <button
+                      onClick={() =>
+                        downloadFile('05_Trilha_Sonora.txt', completedConversation.generatedFiles.trilha!)
+                      }
+                      className="w-full px-4 py-3 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-lg hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-all flex items-center justify-between"
+                    >
+                      <span className="font-medium">🎵 Trilha Sonora</span>
+                      <Download size={18} />
+                    </button>
+                  )}
+
+                  {/* Takes/Divisão de Cenas */}
+                  {completedConversation.generatedFiles.takes && (
+                    <button
+                      onClick={() =>
+                        downloadFile('06_Takes_Divisao_Cenas.txt', completedConversation.generatedFiles.takes!)
+                      }
+                      className="w-full px-4 py-3 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-lg hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-all flex items-center justify-between"
+                    >
+                      <span className="font-medium">🎬 Takes/Divisão</span>
+                      <Download size={18} />
+                    </button>
+                  )}
+
+                  {/* Separador */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+                  {/* Baixar Tudo em JSON */}
+                  <button
+                    onClick={() => {
+                      const exportData = {
+                        version: '1.0',
+                        exportedAt: new Date().toISOString(),
+                        conversation: {
+                          id: completedConversation.id,
+                          templateId: completedConversation.templateId,
+                          createdAt: completedConversation.createdAt,
+                          status: completedConversation.status,
+                          stats: completedConversation.stats,
+                        },
+                        files: {
+                          estrutura: completedConversation.generatedFiles.estrutura || null,
+                          hook: completedConversation.generatedFiles.hook || null,
+                          topicos: completedConversation.generatedFiles.topicos || [],
+                          personagens: completedConversation.generatedFiles.personagens || null,
+                          trilha: completedConversation.generatedFiles.trilha || null,
+                          takes: completedConversation.generatedFiles.takes || null,
+                          roteiroCompleto: [
+                            completedConversation.generatedFiles.hook || '',
+                            ...(completedConversation.generatedFiles.topicos || []),
+                          ].join('\n\n'),
+                        },
+                        messages: completedConversation.messages.map(m => ({
+                          id: m.id,
+                          role: m.role,
+                          content: m.content,
+                          timestamp: m.timestamp,
+                          stepId: m.stepId,
+                          chars: m.chars,
+                          tokens: m.tokens,
+                        })),
+                      };
+
+                      const jsonString = JSON.stringify(exportData, null, 2);
+                      downloadFile(`Roteiro_${completedConversation.id}_Export.json`, jsonString);
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                  >
+                    <span>📦 Baixar Tudo (JSON)</span>
+                    <Download size={18} />
+                  </button>
+
+                  {/* Baixar Tudo em TXT Formatado */}
+                  <button
+                    onClick={() => {
+                      const sections = [];
+
+                      sections.push('═══════════════════════════════════════════════════════════');
+                      sections.push('  ROTEIRO COMPLETO - PACOTE DE ARQUIVOS');
+                      sections.push('═══════════════════════════════════════════════════════════');
+                      sections.push(`Gerado em: ${new Date().toLocaleString('pt-BR')}`);
+                      sections.push(`Template: ${completedConversation.templateId}`);
+                      sections.push(`ID da Conversa: ${completedConversation.id}`);
+                      sections.push('');
+
+                      sections.push('───────────────────────────────────────────────────────────');
+                      sections.push('📊 ESTATÍSTICAS');
+                      sections.push('───────────────────────────────────────────────────────────');
+                      sections.push(`Mensagens trocadas: ${completedConversation.messages.length}`);
+                      sections.push(`Total de caracteres: ${completedConversation.stats.totalChars.toLocaleString()}`);
+                      sections.push(`Duração: ${Math.floor(completedConversation.stats.duration / 60)}min ${completedConversation.stats.duration % 60}s`);
+                      const videoTime = calculateVideoTime(completedConversation.stats.totalChars);
+                      sections.push(`Tempo estimado do vídeo: ${videoTime.medium.duration}`);
+                      sections.push('');
+
+                      if (completedConversation.generatedFiles.estrutura) {
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('📋 01 - ESTRUTURA DO ROTEIRO');
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('');
+                        sections.push(completedConversation.generatedFiles.estrutura);
+                        sections.push('');
+                        sections.push('');
+                      }
+
+                      if (completedConversation.generatedFiles.hook) {
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('🎬 02 - HOOK / INTRODUÇÃO');
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('');
+                        sections.push(completedConversation.generatedFiles.hook);
+                        sections.push('');
+                        sections.push('');
+                      }
+
+                      if (completedConversation.generatedFiles.topicos) {
+                        completedConversation.generatedFiles.topicos.forEach((topico, idx) => {
+                          sections.push('═══════════════════════════════════════════════════════════');
+                          sections.push(`📖 ${String(idx + 3).padStart(2, '0')} - TÓPICO ${idx + 1}`);
+                          sections.push('═══════════════════════════════════════════════════════════');
+                          sections.push('');
+                          sections.push(topico);
+                          sections.push('');
+                          sections.push('');
+                        });
+                      }
+
+                      if (completedConversation.generatedFiles.personagens) {
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('👥 PERSONAGENS');
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('');
+                        sections.push(completedConversation.generatedFiles.personagens);
+                        sections.push('');
+                        sections.push('');
+                      }
+
+                      if (completedConversation.generatedFiles.trilha) {
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('🎵 TRILHA SONORA');
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('');
+                        sections.push(completedConversation.generatedFiles.trilha);
+                        sections.push('');
+                        sections.push('');
+                      }
+
+                      if (completedConversation.generatedFiles.takes) {
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('🎬 TAKES / DIVISÃO DE CENAS');
+                        sections.push('═══════════════════════════════════════════════════════════');
+                        sections.push('');
+                        sections.push(completedConversation.generatedFiles.takes);
+                        sections.push('');
+                        sections.push('');
+                      }
+
+                      const fullPackage = sections.join('\n');
+                      downloadFile(`Roteiro_Completo_${completedConversation.id}_Pacote.txt`, fullPackage);
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                  >
+                    <span>📄 Baixar Tudo (TXT Formatado)</span>
+                    <Download size={18} />
+                  </button>
+                </div>
+
+                {/* Exportar Prompts como Template */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border-2 border-indigo-200 dark:border-indigo-800">
+                  <h3 className="font-semibold mb-2 text-sm text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                    ⚙️ Criar Template Customizado
+                  </h3>
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-3">
+                    Exporte os prompts usados nesta geração para criar seu próprio template de roteiro
+                  </p>
+                  <button
+                    onClick={() => {
+                      // Filtrar apenas mensagens do usuário (prompts enviados)
+                      const userMessages = completedConversation.messages.filter(m => m.role === 'user');
+
+                      const templateContent = [
+                        '# TEMPLATE DE ROTEIRO CUSTOMIZADO',
+                        `# Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+                        `# Template original: ${completedConversation.templateId}`,
+                        '',
+                        '## 📚 COMO USAR ESTE TEMPLATE',
+                        '## 1. Edite os prompts abaixo conforme necessário',
+                        '## 2. Mantenha as variáveis {{NOME_VARIAVEL}} para serem substituídas automaticamente',
+                        '## 3. Salve este arquivo e use como referência para futuros roteiros',
+                        '## 4. Você pode adicionar/remover steps conforme sua necessidade',
+                        '',
+                        '## 🔧 VARIÁVEIS DISPONÍVEIS:',
+                        '## - {{TITULO}} - Título do vídeo',
+                        '## - {{SINOPSE}} - Sinopse/descrição',
+                        '## - {{BASE_CONHECIMENTO}} - Informações extras',
+                        '## - {{NUM_TOPICOS}} - Quantidade de tópicos',
+                        '## - {{NUM_SUBTOPICOS}} - Subtópicos por tópico',
+                        '## - {{IDIOMA}} - Idioma (pt, en, es)',
+                        '## - {{CARACTERES_TOTAIS}} - Total de caracteres',
+                        '## - {{CARACTERES_POR_TOPICO}} - Caracteres por tópico',
+                        '## - {{CARACTERES_HOOK}} - Caracteres do hook',
+                        '## - {{TOPICO_NUM}} - Número do tópico atual',
+                        '## - {{TOPICO_ESTRUTURA}} - Estrutura do tópico',
+                        '',
+                        '---',
+                        '',
+                        '## 📋 PROMPTS ENVIADOS',
+                        '',
+                        ...userMessages.map((msg, idx) => {
+                          return [
+                            `### ${idx + 1}. STEP: ${msg.stepId?.toUpperCase() || 'DESCONHECIDO'}`,
+                            `**Timestamp:** ${new Date(msg.timestamp).toLocaleString('pt-BR')}`,
+                            `**Tamanho:** ${msg.content.length} caracteres`,
+                            '',
+                            '#### Prompt:',
+                            '```',
+                            msg.content,
+                            '```',
+                            '',
+                            '---',
+                            ''
+                          ].join('\n');
+                        }),
+                        '',
+                        '## 💡 DICAS PARA EDIÇÃO:',
+                        '## - Para roteiros mais longos, aumente {{CARACTERES_POR_TOPICO}}',
+                        '## - Para mais detalhes, aumente {{NUM_SUBTOPICOS}}',
+                        '## - Mantenha a linguagem consistente em todos os prompts',
+                        '## - Teste alterações pequenas primeiro antes de grandes mudanças',
+                        '',
+                        `## 📊 ESTATÍSTICAS DESTA GERAÇÃO:`,
+                        `## - Total de prompts: ${userMessages.length}`,
+                        `## - Mensagens totais: ${completedConversation.messages.length}`,
+                        `## - Caracteres gerados: ${completedConversation.stats.totalChars.toLocaleString()}`,
+                        `## - Duração: ${Math.floor(completedConversation.stats.duration / 60)}min ${completedConversation.stats.duration % 60}s`,
+                      ].join('\n');
+
+                      downloadFile('TEMPLATE_Customizado.md', templateContent);
+                    }}
+                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
+                  >
+                    <Download size={18} />
+                    <span>💾 Exportar Prompts (Template)</span>
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <h3 className="font-semibold mb-3 text-sm text-gray-700 dark:text-gray-300">
+                    📊 Estatísticas
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Mensagens</div>
+                      <div className="font-bold text-lg">
+                        {completedConversation.messages.length}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Caracteres</div>
+                      <div className="font-bold text-lg">
+                        {completedConversation.stats.totalChars.toLocaleString()}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Duração</div>
+                      <div className="font-bold text-lg flex items-center gap-1">
+                        <Clock size={16} />
+                        {Math.floor(completedConversation.stats.duration / 60)}:
+                        {(completedConversation.stats.duration % 60).toString().padStart(2, '0')}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Vídeo (média)</div>
+                      <div className="font-bold text-lg">
+                        {calculateVideoTime(completedConversation.stats.totalChars).medium.duration}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-700 dark:text-red-400 text-sm">
-              <strong>Erro:</strong> {error}
-            </p>
-          </div>
-        )}
-
-        <Footer />
       </div>
     </main>
   );

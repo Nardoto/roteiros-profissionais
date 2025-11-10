@@ -18,6 +18,7 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
   const [scriptMode, setScriptMode] = useState<ScriptMode>('documentary');
   const [language, setLanguage] = useState<StoryLanguage>('pt'); // Português por padrão
   const [targetCharacters, setTargetCharacters] = useState<number>(100000); // Padrão: 100k caracteres
+  const [claudeModel, setClaudeModel] = useState<'haiku' | 'sonnet' | 'opus'>('sonnet'); // Modelo Claude padrão: Sonnet 4.5
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPromptViewerOpen, setIsPromptViewerOpen] = useState(false);
   const [customPrompts, setCustomPrompts] = useState<Record<string, string>>({});
@@ -79,6 +80,7 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
       language,
       targetCharacters,
       customPrompts,
+      claudeModel: selectedApi.provider === 'anthropic' ? claudeModel : undefined,
     });
   };
 
@@ -353,6 +355,74 @@ export default function InputForm({ onSubmit, isGenerating }: InputFormProps) {
               : 'Defina o total de caracteres desejado para seu roteiro personalizado.'}
           </p>
         </div>
+
+        {/* Seleção de Modelo Claude - Apenas para Anthropic */}
+        {selectedApi.provider === 'anthropic' && (
+          <div>
+            <label htmlFor="claudeModel" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span>Modelo Claude 4 *</span>
+              </div>
+            </label>
+
+            {/* Botões de Preset Rápido */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setClaudeModel('haiku')}
+                className={`px-3 py-3 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${
+                  claudeModel === 'haiku'
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
+                }`}
+                disabled={isGenerating}
+              >
+                <div className="text-center">
+                  <div className="font-bold text-sm">⚡ Haiku 4.5</div>
+                  <div className="text-xs mt-1 opacity-90">Mais barato</div>
+                  <div className="text-xs font-semibold mt-1">~US$ 0.30</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setClaudeModel('sonnet')}
+                className={`px-3 py-3 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${
+                  claudeModel === 'sonnet'
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50'
+                }`}
+                disabled={isGenerating}
+              >
+                <div className="text-center">
+                  <div className="font-bold text-sm">⚖️ Sonnet 4.5</div>
+                  <div className="text-xs mt-1 opacity-90">Balanceado</div>
+                  <div className="text-xs font-semibold mt-1">~US$ 0.50</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setClaudeModel('opus')}
+                className={`px-3 py-3 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${
+                  claudeModel === 'opus'
+                    ? 'bg-purple-500 text-white shadow-lg'
+                    : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50'
+                }`}
+                disabled={isGenerating}
+              >
+                <div className="text-center">
+                  <div className="font-bold text-sm">💎 Opus 4.1</div>
+                  <div className="text-xs mt-1 opacity-90">Melhor qualidade</div>
+                  <div className="text-xs font-semibold mt-1">~US$ 1.00</div>
+                </div>
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              💡 Para testes, recomendamos <strong>Haiku 4.5</strong> (mais barato e rápido). Para produção final, use <strong>Opus 4.1</strong> (melhor qualidade).
+            </p>
+          </div>
+        )}
 
         {/* Base de Conhecimento - Simplificada */}
         {showSimpleConfig && (

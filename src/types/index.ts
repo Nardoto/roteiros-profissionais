@@ -92,6 +92,7 @@ export interface ScriptInput {
   targetCharacters?: number; // Total de caracteres desejado para o roteiro
   customPrompts?: Record<string, string>; // Prompts customizados pelo usuário
   templateId?: string; // ID do template usado
+  claudeModel?: 'haiku' | 'sonnet' | 'opus'; // Modelo Claude selecionado manualmente (apenas para Anthropic)
 }
 
 export interface GeneratedScript {
@@ -111,12 +112,22 @@ export interface PartialFile {
   isComplete: boolean;
 }
 
+// Etapa do checklist de geração
+export interface ChecklistStep {
+  id: string;
+  label: string;
+  status: 'pending' | 'running' | 'success' | 'error';
+  message?: string;
+  error?: string;
+}
+
 export interface ProgressUpdate {
   progress: number;
   message: string;
   currentFile?: string;
   streamedContent?: string; // Conteúdo sendo gerado em tempo real
   partialFile?: PartialFile; // Arquivo parcial disponível para download
+  checklistSteps?: ChecklistStep[]; // Etapas do checklist de geração
 }
 
 export type FileType = 'roteiro' | 'trilha' | 'textoNarrado' | 'personagens' | 'titulo' | 'takes';

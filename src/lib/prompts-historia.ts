@@ -1,47 +1,28 @@
 import { ScriptInput } from '@/types';
 
 /**
- * PROMPTS PARA MODO HISTÓRIA BÍBLICA
- * Sistema iterativo com validação de caracteres (18k-22k por tópico)
+ * PROMPTS SIMPLIFICADOS PARA MODO HISTÓRIA
+ * Baseado no padrão: Estrutura → Introdução → Desenvolver cada tópico
  */
 
 // ============================================================================
-// ETAPA 1: GERAR ESTRUTURA (3 TÓPICOS + 24 SUBTÓPICOS)
+// ETAPA 1: ESTRUTURA - Apenas títulos numerados (1.1, 1.2, etc)
 // ============================================================================
 
 export function buildEstruturaPrompt(input: ScriptInput, language?: 'pt' | 'en' | 'es'): string {
-  const lang = language || 'pt'; // Português como padrão
-  const targetTotal = input.targetCharacters || 100000;
-  const targetPerTopic = Math.floor(targetTotal / 3);
+  const lang = language || 'pt';
 
-  const instructions = lang === 'pt'
-    ? `Você está criando o esquema para um vídeo de história bíblica. Crie uma estrutura com:
-- 3 TÓPICOS PRINCIPAIS (sem introdução ou conclusão)
-- 8 SUBTÓPICOS para cada tópico principal (24 subtópicos no total)
-- Objetivo: ${targetTotal.toLocaleString()} caracteres no TOTAL (aproximadamente ${targetPerTopic.toLocaleString()} caracteres por tópico)
-- Ordem cronológica
-- Sem informação repetida entre tópicos
-- Cada tópico deve ser bem dividido para que os espectadores não se sintam perdidos
+  if (lang === 'pt') {
+    return `Possuo um canal no YouTube de histórias bíblicas. Se fosse para criar um roteiro sobre "${input.title}" em 3 tópicos como se fosse uma narrativa de livro e em ordem cronológica, sem que informações fiquem repetidas, como você criaria?
 
-Os tópicos NÃO devem conter introdução ou conclusão, apenas o desenvolvimento narrativo.
-
-Título da História: ${input.title}
 Sinopse: ${input.synopsis}
-${input.knowledgeBase ? `Conhecimento Adicional:\n${input.knowledgeBase}` : ''}
+${input.knowledgeBase ? `\nInformações extras:\n${input.knowledgeBase}` : ''}
 
-PLANEJAMENTO NARRATIVO - PENSE EM COMO CONECTAR OS TÓPICOS:
-- Identifique GANCHOS entre tópicos (como um tópico prepara o próximo)
-- Marque momentos para FORESHADOWING (antecipar eventos futuros)
-- Defina CALLBACKS (oportunidades de relembrar eventos anteriores)
+Escreva em ${lang === 'pt' ? 'português' : lang === 'en' ? 'inglês' : 'espanhol'}. Os tópicos não devem conter introdução e nem conclusão, e devem ser bem divididos para que os espectadores não se sintam perdidos no vídeo. Cada tópico deve ter 8 subtópicos.
 
-Exemplo de estrutura conectada:
-TÓPICO 1 termina com → algo que será explorado no Tópico 2
-TÓPICO 2 relembra → evento do Tópico 1 e planta → gancho para Tópico 3
-TÓPICO 3 entrega → promessas dos Tópicos 1 e 2
+Formate EXATAMENTE assim (numere os subtópicos como 1.1, 1.2 etc... e NÃO desenvolva os subtópicos, quero apenas seus títulos):
 
-Formate sua resposta EXATAMENTE assim:
-
-TÓPICO 1: [NOME DO TÓPICO EM MAIÚSCULAS]
+TÓPICO 1: [NOME DO TÓPICO]
 1.1 [Nome do subtópico]
 1.2 [Nome do subtópico]
 1.3 [Nome do subtópico]
@@ -51,7 +32,7 @@ TÓPICO 1: [NOME DO TÓPICO EM MAIÚSCULAS]
 1.7 [Nome do subtópico]
 1.8 [Nome do subtópico]
 
-TÓPICO 2: [NOME DO TÓPICO EM MAIÚSCULAS]
+TÓPICO 2: [NOME DO TÓPICO]
 2.1 [Nome do subtópico]
 2.2 [Nome do subtópico]
 2.3 [Nome do subtópico]
@@ -61,7 +42,7 @@ TÓPICO 2: [NOME DO TÓPICO EM MAIÚSCULAS]
 2.7 [Nome do subtópico]
 2.8 [Nome do subtópico]
 
-TÓPICO 3: [NOME DO TÓPICO EM MAIÚSCULAS]
+TÓPICO 3: [NOME DO TÓPICO]
 3.1 [Nome do subtópico]
 3.2 [Nome do subtópico]
 3.3 [Nome do subtópico]
@@ -69,25 +50,21 @@ TÓPICO 3: [NOME DO TÓPICO EM MAIÚSCULAS]
 3.5 [Nome do subtópico]
 3.6 [Nome do subtópico]
 3.7 [Nome do subtópico]
-3.8 [Nome do subtópico]`
-    : lang === 'en'
-    ? `You are creating the outline for a biblical story video. Create a structure with:
-- 3 MAIN TOPICS (without introduction or conclusion)
-- 8 SUBTOPICS for each main topic (24 subtopics total)
-- Target: ${targetTotal.toLocaleString()} characters TOTAL (approximately ${targetPerTopic.toLocaleString()} characters per topic)
-- Chronological order
-- No repeated information between topics
-- Each topic should be well divided so viewers don't feel lost
+3.8 [Nome do subtópico]`;
+  }
 
-The topics must NOT contain introduction or conclusion, just the narrative development.
+  // English
+  if (lang === 'en') {
+    return `I have a YouTube channel about biblical stories. If you were to create a script about "${input.title}" in 3 topics as if it were a book narrative and in chronological order, without repeated information, how would you create it?
 
-Story Title: ${input.title}
 Synopsis: ${input.synopsis}
-${input.knowledgeBase ? `Additional Knowledge:\n${input.knowledgeBase}` : ''}
+${input.knowledgeBase ? `\nExtra information:\n${input.knowledgeBase}` : ''}
 
-Format your response EXACTLY like this example:
+Write in English. The topics should not contain introduction or conclusion, and should be well divided so that viewers don't feel lost in the video. Each topic must have 8 subtopics.
 
-TOPIC 1: [TOPIC NAME IN CAPS]
+Format EXACTLY like this (number the subtopics as 1.1, 1.2 etc... and DO NOT develop the subtopics, I only want their titles):
+
+TOPIC 1: [TOPIC NAME]
 1.1 [Subtopic name]
 1.2 [Subtopic name]
 1.3 [Subtopic name]
@@ -97,7 +74,7 @@ TOPIC 1: [TOPIC NAME IN CAPS]
 1.7 [Subtopic name]
 1.8 [Subtopic name]
 
-TOPIC 2: [TOPIC NAME IN CAPS]
+TOPIC 2: [TOPIC NAME]
 2.1 [Subtopic name]
 2.2 [Subtopic name]
 2.3 [Subtopic name]
@@ -107,7 +84,7 @@ TOPIC 2: [TOPIC NAME IN CAPS]
 2.7 [Subtopic name]
 2.8 [Subtopic name]
 
-TOPIC 3: [TOPIC NAME IN CAPS]
+TOPIC 3: [TOPIC NAME]
 3.1 [Subtopic name]
 3.2 [Subtopic name]
 3.3 [Subtopic name]
@@ -115,24 +92,20 @@ TOPIC 3: [TOPIC NAME IN CAPS]
 3.5 [Subtopic name]
 3.6 [Subtopic name]
 3.7 [Subtopic name]
-3.8 [Subtopic name]`
-    : `Estás creando el esquema para un video de historia bíblica. Crea una estructura con:
-- 3 TÓPICOS PRINCIPALES (sin introducción ni conclusión)
-- 8 SUBTÓPICOS para cada tópico principal (24 subtópicos en total)
-- Objetivo: ${targetTotal.toLocaleString()} caracteres en TOTAL (aproximadamente ${targetPerTopic.toLocaleString()} caracteres por tópico)
-- Orden cronológico
-- Sin información repetida entre tópicos
-- Cada tópico debe estar bien dividido para que los espectadores no se sientan perdidos
+3.8 [Subtopic name]`;
+  }
 
-Los tópicos NO deben contener introducción ni conclusión, solo el desarrollo narrativo.
+  // Spanish
+  return `Tengo un canal de YouTube sobre historias bíblicas. Si fueras a crear un guion sobre "${input.title}" en 3 tópicos como si fuera una narrativa de libro y en orden cronológico, sin información repetida, ¿cómo lo crearías?
 
-Título de la Historia: ${input.title}
 Sinopsis: ${input.synopsis}
-${input.knowledgeBase ? `Conocimiento Adicional:\n${input.knowledgeBase}` : ''}
+${input.knowledgeBase ? `\nInformación extra:\n${input.knowledgeBase}` : ''}
 
-Formatea tu respuesta EXACTAMENTE como este ejemplo:
+Escribe en español. Los tópicos no deben contener introducción ni conclusión, y deben estar bien divididos para que los espectadores no se sientan perdidos en el video. Cada tópico debe tener 8 subtópicos.
 
-TÓPICO 1: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
+Formatea EXACTAMENTE así (numera los subtópicos como 1.1, 1.2 etc... y NO desarrolles los subtópicos, solo quiero sus títulos):
+
+TÓPICO 1: [NOMBRE DEL TÓPICO]
 1.1 [Nombre del subtópico]
 1.2 [Nombre del subtópico]
 1.3 [Nombre del subtópico]
@@ -142,7 +115,7 @@ TÓPICO 1: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
 1.7 [Nombre del subtópico]
 1.8 [Nombre del subtópico]
 
-TÓPICO 2: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
+TÓPICO 2: [NOMBRE DEL TÓPICO]
 2.1 [Nombre del subtópico]
 2.2 [Nombre del subtópico]
 2.3 [Nombre del subtópico]
@@ -152,7 +125,7 @@ TÓPICO 2: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
 2.7 [Nombre del subtópico]
 2.8 [Nombre del subtópico]
 
-TÓPICO 3: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
+TÓPICO 3: [NOMBRE DEL TÓPICO]
 3.1 [Nombre del subtópico]
 3.2 [Nombre del subtópico]
 3.3 [Nombre del subtópico]
@@ -161,506 +134,231 @@ TÓPICO 3: [NOMBRE DEL TÓPICO EN MAYÚSCULAS]
 3.6 [Nombre del subtópico]
 3.7 [Nombre del subtópico]
 3.8 [Nombre del subtópico]`;
-
-  return instructions;
 }
 
 // ============================================================================
-// ETAPA 2: GERAR HOOK/INTRODUÇÃO (~1000 CARACTERES)
+// ETAPA 2: INTRODUÇÃO - 1000 caracteres
 // ============================================================================
 
 export function buildHookPrompt(input: ScriptInput, estrutura: string, language?: 'pt' | 'en' | 'es'): string {
-  const lang = language || 'pt'; // Português como padrão
-  const instructions = lang === 'pt'
-    ? `Crie uma introdução imersiva, cativante e profética de aproximadamente 1000 caracteres que prenda o espectador.
+  const lang = language || 'pt';
 
-Escreva como se uma história muito profética com narrativa forte estivesse prestes a se desdobrar nesta introdução.
+  if (lang === 'pt') {
+    return `Faça uma introdução imersiva e chamativa e curiosa de 1000 caracteres que prenda o espectador.
 
-TÉCNICAS NARRATIVAS OBRIGATÓRIAS PARA O HOOK:
-1. Comece com algo intrigante, contraditório ou surpreendente
-2. Plante uma PERGUNTA ou MISTÉRIO que será respondido ao longo da história
-3. Use técnicas de antecipação:
-   • "Mas o que ele não sabia era que..."
-   • "Isso era apenas o começo de..."
-   • "Ninguém imaginava que..."
-   • "Parecia impossível, mas..."
-4. Crie contraste entre aparência e realidade
-5. Termine com gancho que faça o espectador querer continuar
-
-Exemplo de estrutura:
-[Situação aparente] → [Reviravolta/mistério] → [Pergunta que será respondida]
-
-"Parecia o fim... mas era o começo. Como [situação improvável] se tornaria [resultado surpreendente]?"
-
-Diretrizes de estilo:
-- Tom profético e misterioso
-- Narrativa forte e envolvente
-- Use linguagem bíblica mas acessível
-- Transporte o leitor para a época e local
-
-Título da História: ${input.title}
-Sinopse: ${input.synopsis}
-
-ESTRUTURA DA HISTÓRIA:
+Estrutura do roteiro:
 ${estrutura}
 
-Escreva APENAS o texto de introdução (aproximadamente 1000 caracteres). Não adicione títulos ou cabeçalhos.`
-    : lang === 'en'
-    ? `Create an immersive, captivating, and prophetic introduction of approximately 1000 characters that hooks the viewer.
+Título: ${input.title}
+Sinopse: ${input.synopsis}`;
+  }
 
-Write as if a very prophetic tale with strong narrative is ready to unfold in this introduction.
+  if (lang === 'en') {
+    return `Create an immersive, catchy and curious introduction of 1000 characters that hooks the viewer.
 
-Style guidelines:
-- Prophetic and mysterious tone
-- Strong, engaging narrative
-- Build curiosity and tension
-- No difficult words - simple and direct
-- Make the viewer want to keep watching
-
-Story Title: ${input.title}
-Synopsis: ${input.synopsis}
-Structure:
+Script structure:
 ${estrutura}
 
-Write ONLY the introduction text (around 1000 characters). Do not add titles, headers, or explanations.`
-    : `Crea una introducción inmersiva, cautivadora y profética de aproximadamente 1000 caracteres que enganche al espectador.
+Title: ${input.title}
+Synopsis: ${input.synopsis}`;
+  }
 
-Escribe como si un cuento muy profético con narrativa fuerte estuviera listo para desplegarse en esta introducción.
+  return `Haz una introducción inmersiva, atractiva y curiosa de 1000 caracteres que enganche al espectador.
 
-Pautas de estilo:
-- Tono profético y misterioso
-- Narrativa fuerte y envolvente
-- Construye curiosidad y tensión
-- Sin palabras difíciles - simple y directo
-- Haz que el espectador quiera seguir viendo
-
-Título de la Historia: ${input.title}
-Sinopsis: ${input.synopsis}
-Estructura:
+Estructura del guion:
 ${estrutura}
 
-Escribe SOLO el texto de introducción (alrededor de 1000 caracteres). No agregues títulos, encabezados o explicaciones.`;
-
-  return instructions;
+Título: ${input.title}
+Sinopsis: ${input.synopsis}`;
 }
 
 // ============================================================================
-// ETAPA 3: GERAR TÓPICO (18k-22k CARACTERES)
+// ETAPA 3: DESENVOLVER TÓPICO - 20.000 caracteres
 // ============================================================================
 
 export function buildTopicoPrompt(
-  topicNumber: number,
-  topicTitle: string,
+  topicoNumber: number,
+  topicoTitle: string,
   subtopics: string[],
   input: ScriptInput,
-  language?: 'pt' | 'en' | 'es',
-  previousTopics?: string[]
+  language: 'pt' | 'en' | 'es',
+  topicosAnteriores: string[]
 ): string {
-  const lang = language || 'pt'; // Português como padrão
-  const targetTotal = input.targetCharacters || 100000;
-  const targetPerTopic = Math.floor(targetTotal / 3);
-  const targetPerSubtopic = Math.floor(targetPerTopic / 8);
+  const lang = language || 'pt';
+  const targetChars = 20000;
 
-  const previousContext = previousTopics && previousTopics.length > 0
-    ? lang === 'pt'
-      ? `\n\nJÁ COBERTO ANTERIORMENTE (NÃO repita esta informação):\n${previousTopics.join('\n---\n')}`
-      : lang === 'en'
-      ? `\n\nPREVIOUSLY COVERED (do NOT repeat this information):\n${previousTopics.join('\n---\n')}`
-      : `\n\nYA CUBIERTO ANTERIORMENTE (NO repitas esta información):\n${previousTopics.join('\n---\n')}`
-    : '';
+  // Construir lista de subtópicos
+  const subtopicList = subtopics.map((sub, idx) => `${topicoNumber}.${idx + 1} ${sub}`).join('\n');
 
-  const instructions = lang === 'pt'
-    ? `Escreva o Tópico ${topicNumber}: "${topicTitle}" seguindo estas diretrizes rigorosas:
+  if (lang === 'pt') {
+    return `Faça agora o Tópico ${topicoNumber}, faça sem palavras difíceis, um texto narrativo limpo e direto, sem muita enrolação. Os capítulos e versículos devem ser mencionados de forma natural no texto antes de sua citação, para que não haja uma quebra brusca de narrativa.
 
-REGRAS CRÍTICAS:
-1. Tamanho objetivo: ~${targetPerTopic.toLocaleString()} CARACTERES para este tópico (Objetivo total da história: ${targetTotal.toLocaleString()} caracteres em 3 tópicos)
-2. Distribua o conteúdo uniformemente entre os 8 subtópicos (~${targetPerSubtopic.toLocaleString()} caracteres cada)
-3. Escreva como narrativa de livro em terceira pessoa
-4. Use versículos bíblicos integrados naturalmente ao texto
-5. NÃO repita informação de outros tópicos
-6. NÃO vá além do que este tópico pede
-7. NÃO crie conclusões - termine diretamente sem reflexões
-8. Linguagem simples que até uma criança possa entender
-9. Texto dinâmico e fluido que gere conexão com o espectador
-10. Seja fiel ao texto bíblico - sem informação adicionada
-11. Escreva como se falasse diretamente com uma pessoa
+Quero que você se baseie em cada tópico, de forma individual, para fazer uma produção textual se limitando a dizer apenas ao que o tópico está pedindo. E principalmente NÃO repita informações ditas antes por outros tópicos. E nem vá além do que o tópico está pedindo, pois irá interferir na narrativa dos próximos tópicos.
+
+Siga essa instrução para escrever os parágrafos de cada tópico:
+
+Escreva como se fosse uma narrativa de um livro, em terceira pessoa, usando sempre versículos bíblicos referente ao momento da história, não importa se ele é grande. Escreva como um experiente escritor e sábio, se comporte como tal. Escreva de uma forma que promova dinamismo e imersão. O texto precisa ser fluido e o texto não pode ser cansativo. Escreva um texto humanizado que gere conexão com o espectador. O texto deve ser principalmente fiel ao texto bíblico, sem adicionar informações que a bíblia não fala. Pense em um estilo de comunicação claro e direto na narrativa, sem enrolação. Escreva de uma forma dinâmica, para que até uma criança consiga entender, como se estivesse conversando diretamente com uma única pessoa. Não crie nenhuma conclusão sobre o tópico, apenas o encerre de forma direta sem reflexões. Use uma linguagem simples e de fácil entendimento.
+
+Faça o tópico ${topicoNumber} com ${targetChars.toLocaleString()} caracteres separados dentre os 8 subtópicos. Não repita versículos e nem informações já ditas antes.
+
+Esse é o tópico:
+
+TÓPICO ${topicoNumber}: ${topicoTitle}
+${subtopicList}
 
 Título da História: ${input.title}
 Sinopse: ${input.synopsis}
-${input.knowledgeBase ? `Conhecimento Adicional:\n${input.knowledgeBase}` : ''}
+${input.knowledgeBase ? `Conhecimento adicional:\n${input.knowledgeBase}` : ''}`;
+  }
 
-SUBTÓPICOS A DESENVOLVER:
-${subtopics.map((sub, i) => `${i + 1}. ${sub}`).join('\n')}
-${previousContext}
+  if (lang === 'en') {
+    return `Now create Topic ${topicoNumber}. Use simple words, clean and direct narrative text, without too much rambling. Chapters and verses should be mentioned naturally in the text before their citation, so there is no abrupt narrative break.
 
-===========================================
-TÉCNICAS NARRATIVAS OBRIGATÓRIAS
-===========================================
+Base yourself on each topic individually to create a textual production limiting yourself to saying only what the topic is asking. And mainly DO NOT repeat information said before by other topics. And don't go beyond what the topic is asking, as it will interfere with the narrative of the next topics.
 
-${topicNumber > 1 ? `
-✅ CALLBACK (Relembrar tópicos anteriores):
-- Faça pelo menos 1-2 referências NATURAIS aos tópicos já desenvolvidos
-- Conecte eventos passados com o que está acontecendo agora
-- Use frases como:
-  • "Lembra quando..." ou "Como vimos..."
-  • "Aquele momento em que [evento do tópico anterior]..."
-  • "Depois de [evento anterior], agora..."
-  • "O que começou com [tópico 1] agora..."
-- NÃO force a referência - integre organicamente na narrativa
-` : ''}
+Follow this instruction to write the paragraphs of each topic:
 
-${topicNumber < 3 ? `
-✅ FORESHADOWING (Antecipar próximos eventos):
-- Plante 1-2 sementes sutis do que está por vir
-- Crie expectativa sem revelar tudo
-- Use frases como:
-  • "Mas isso era apenas o começo..."
-  • "O que ele não sabia era que..."
-  • "Isso tudo faria sentido mais tarde..."
-  • "Algo maior estava prestes a acontecer..."
-  • "Essa decisão teria consequências que ele ainda não imaginava..."
-- Mantenha o mistério - não entregue o final
-` : ''}
+Write as if it were a book narrative, in third person, always using biblical verses referring to the moment of the story, no matter if it's long. Write as an experienced and wise writer, behave as such. Write in a way that promotes dynamism and immersion. The text needs to be fluid and not tiring. Write a humanized text that generates connection with the viewer. The text must be mainly faithful to the biblical text, without adding information that the bible doesn't say. Think of a clear and direct communication style in the narrative, without rambling. Write dynamically, so that even a child can understand, as if you were talking directly to a single person. Don't create any conclusion about the topic, just end it directly without reflections. Use simple and easy-to-understand language.
 
-${topicNumber === 3 ? `
-✅ PAYOFF (Entregar promessas anteriores):
-- Conecte este tópico final com os tópicos 1 e 2
-- Mostre como tudo se encaixa no plano maior
-- Resolva os ganchos e mistérios plantados anteriormente
-- Use frases como:
-  • "E foi exatamente como prometido..."
-  • "Agora tudo fazia sentido: aquele [evento do tópico 1]..."
-  • "O que começou em [tópico 1], passou por [tópico 2], agora culmina em..."
-  • "Finalmente se revelava o propósito de..."
-- Crie sensação de círculo narrativo completo
-` : ''}
+Make topic ${topicoNumber} with ${targetChars.toLocaleString()} characters separated among the 8 subtopics. Don't repeat verses or information already said before. Write in English.
 
-===========================================
-TRANSIÇÕES ENTRE SUBTÓPICOS
-===========================================
-- NÃO liste subtópicos de forma mecânica (não use "Primeiro... Segundo... Terceiro...")
-- Crie PONTES NARRATIVAS entre subtópicos
-- Use conectores orgânicos:
-  • "Enquanto isso..."
-  • "Mas antes disso..."
-  • "Paralelamente..."
-  • "No mesmo momento..."
-  • "Isso nos leva a..."
-  • "Logo após..."
+This is the topic:
 
-EXEMPLO RUIM (mecânico):
-"1.1 Moisés nasceu em uma família levita.
-1.2 O faraó ordenou matar os bebês hebreus.
-1.3 A mãe colocou Moisés no rio."
-
-EXEMPLO BOM (narrativo e fluido):
-"Moisés nasceu em um momento crítico para o povo hebreu. O faraó,
-temendo uma rebelião, havia dado uma ordem terrível: todos os bebês
-hebreus deveriam ser lançados ao Nilo. Mas a mãe de Moisés não conseguia
-aceitar aquele destino. Durante três meses, ela escondeu seu filho...
-até que um dia teve uma ideia ousada que mudaria tudo."
-
-Escreva APENAS o Tópico ${topicNumber}: "${topicTitle}" com seus 8 subtópicos. Meta: ~${targetPerTopic.toLocaleString()} CARACTERES.
-NÃO adicione título, cabeçalho ou número de tópico - comece diretamente com a narrativa.`
-    : lang === 'en'
-    ? `Write Topic ${topicNumber}: "${topicTitle}" following these strict guidelines:
-
-CRITICAL RULES:
-1. Target length: ~${targetPerTopic.toLocaleString()} CHARACTERS for this topic (Total story target: ${targetTotal.toLocaleString()} characters across 3 topics)
-2. Distribute content evenly across the 8 subtopics (~${targetPerSubtopic.toLocaleString()} characters each)
-3. Write as a book narrative in third person
-4. Use Bible verses naturally integrated into the text
-5. Do NOT repeat information from other topics
-6. Do NOT go beyond what this topic asks for
-7. Do NOT create conclusions - end directly without reflections
-8. Simple language that even a child can understand
-9. Dynamic, fluid text that generates connection with the viewer
-10. Be faithful to the biblical text - no added information
-11. Write as if talking directly to one person
+TOPIC ${topicoNumber}: ${topicoTitle}
+${subtopicList}
 
 Story Title: ${input.title}
 Synopsis: ${input.synopsis}
-${input.knowledgeBase ? `Additional Knowledge:\n${input.knowledgeBase}` : ''}
+${input.knowledgeBase ? `Additional Knowledge:\n${input.knowledgeBase}` : ''}`;
+  }
 
-SUBTOPICS TO DEVELOP:
-${subtopics.map((sub, i) => `${i + 1}. ${sub}`).join('\n')}
-${previousContext}
+  return `Ahora crea el Tópico ${topicoNumber}. Usa palabras simples, texto narrativo limpio y directo, sin divagar demasiado. Los capítulos y versículos deben mencionarse naturalmente en el texto antes de su cita, para que no haya una ruptura narrativa abrupta.
 
-Write ONLY Topic ${topicNumber}: "${topicTitle}" with its 8 subtopics. Target: ~${targetPerTopic.toLocaleString()} CHARACTERS.
-Do NOT add title, header, or topic number - start directly with the narrative.`
-    : `Escribe el Tópico ${topicNumber}: "${topicTitle}" siguiendo estas pautas estrictas:
+Basa cada tópico individualmente para crear una producción textual limitándote a decir solo lo que el tópico está pidiendo. Y principalmente NO repitas información dicha antes por otros tópicos. Y no vayas más allá de lo que el tópico está pidiendo, ya que interferirá con la narrativa de los próximos tópicos.
 
-REGLAS CRÍTICAS:
-1. Longitud objetivo: ~${targetPerTopic.toLocaleString()} CARACTERES para este tópico (Objetivo total de la historia: ${targetTotal.toLocaleString()} caracteres en 3 tópicos)
-2. Distribuye el contenido uniformemente entre los 8 subtópicos (~${targetPerSubtopic.toLocaleString()} caracteres cada uno)
-3. Escribe como narrativa de libro en tercera persona
-4. Usa versículos bíblicos integrados naturalmente al texto
-5. NO repitas información de otros tópicos
-6. NO vayas más allá de lo que este tópico pide
-7. NO crees conclusiones - termina directamente sin reflexiones
-8. Lenguaje simple que hasta un niño pueda entender
-9. Texto dinámico y fluido que genere conexión con el espectador
-10. Sé fiel al texto bíblico - sin información agregada
-11. Escribe como si hablaras directamente con una persona
+Sigue esta instrucción para escribir los párrafos de cada tópico:
+
+Escribe como si fuera una narrativa de libro, en tercera persona, siempre usando versículos bíblicos referentes al momento de la historia, no importa si es largo. Escribe como un escritor experimentado y sabio, compórtate como tal. Escribe de manera que promueva dinamismo e inmersión. El texto necesita ser fluido y no cansador. Escribe un texto humanizado que genere conexión con el espectador. El texto debe ser principalmente fiel al texto bíblico, sin agregar información que la biblia no dice. Piensa en un estilo de comunicación claro y directo en la narrativa, sin divagar. Escribe dinámicamente, para que hasta un niño pueda entender, como si estuvieras hablando directamente con una sola persona. No crees ninguna conclusión sobre el tópico, solo termínalo directamente sin reflexiones. Usa un lenguaje simple y fácil de entender.
+
+Haz el tópico ${topicoNumber} con ${targetChars.toLocaleString()} caracteres separados entre los 8 subtópicos. No repitas versículos ni información ya dicha antes. Escribe en español.
+
+Este es el tópico:
+
+TÓPICO ${topicoNumber}: ${topicoTitle}
+${subtopicList}
 
 Título de la Historia: ${input.title}
 Sinopsis: ${input.synopsis}
-${input.knowledgeBase ? `Conocimiento Adicional:\n${input.knowledgeBase}` : ''}
-
-SUBTÓPICOS A DESARROLLAR:
-${subtopics.map((sub, i) => `${i + 1}. ${sub}`).join('\n')}
-${previousContext}
-
-Escribe SOLO el Tópico ${topicNumber}: "${topicTitle}" con sus 8 subtópicos. Objetivo: ~${targetPerTopic.toLocaleString()} CARACTERES.
-NO agregues título, encabezado o número de tópico - comienza directamente con la narrativa.`;
-
-  return instructions;
+${input.knowledgeBase ? `Conocimiento adicional:\n${input.knowledgeBase}` : ''}`;
 }
 
 // ============================================================================
-// ETAPA 4: GERAR CONCLUSÃO/CTA
+// ETAPA 4: CONCLUSÃO (OPCIONAL - se precisar)
 // ============================================================================
 
 export function buildConclusaoPrompt(input: ScriptInput, language?: 'pt' | 'en' | 'es'): string {
-  const lang = language || 'pt'; // Português como padrão
-  const instructions = lang === 'pt'
-    ? `Escreva uma breve conclusão chamando o espectador a se inscrever e compartilhar o vídeo.
+  const lang = language || 'pt';
 
-ESTRUTURA DA CONCLUSÃO:
+  if (lang === 'pt') {
+    return `Crie uma conclusão breve e direta de 500-800 caracteres para o roteiro.
 
-1. PAYOFF DO HOOK (Responda ao mistério do início)
-   - Retome a pergunta/mistério plantado na introdução
-   - Mostre como foi resolvido ao longo da história
+Não faça reflexões profundas, apenas encerre a narrativa de forma natural.
 
-2. CÍRCULO NARRATIVO (Conecte fim com começo)
-   - Referencie momento-chave de cada tópico
-   - Mostre como tudo se conecta no plano maior
-   - "Do [tópico 1], passando por [tópico 2], até [tópico 3]..."
+Título: ${input.title}`;
+  }
 
-3. LIÇÃO/MENSAGEM (Aplicação para hoje)
-   - Qual o impacto pessoal desta história?
-   - Como isso se aplica à vida do espectador hoje?
+  if (lang === 'en') {
+    return `Create a brief and direct conclusion of 500-800 characters for the script.
 
-4. CALL TO ACTION
-   - Pergunte o que mais impactou
-   - Convide a inscrever-se, curtir, compartilhar
+Don't make deep reflections, just end the narrative naturally.
 
-Exemplo de estrutura:
-"[Retomar mistério do hook] → E assim vemos que [conexão dos 3 tópicos] →
-Isso nos ensina que [lição] → E você, o que mais te impactou nesta história?
-[CTA: inscrever, compartilhar]"
+Title: ${input.title}`;
+  }
 
-Diretrizes de estilo:
-- Tom profético mas acessível
-- Crie conexão emocional forte
-- Faça o espectador sentir que a jornada valeu a pena
-- Termine com esperança e inspiração
+  return `Crea una conclusión breve y directa de 500-800 caracteres para el guion.
 
-Título da História: ${input.title}
+No hagas reflexiones profundas, solo termina la narrativa naturalmente.
 
-Escreva APENAS o texto de conclusão (aproximadamente 1500-2000 caracteres). Não adicione títulos ou cabeçalhos.`
-    : lang === 'en'
-    ? `Write a brief conclusion calling the viewer to subscribe and share the video.
-
-Style guidelines:
-- Summarize the main lesson or message from the story
-- Create emotional connection
-- Call to action: subscribe, share, comment
-- Ask what most impacted them about the story
-- Keep it concise and engaging
-
-Story Title: ${input.title}
-
-Write ONLY the conclusion text (around 1500-2000 characters). Do not add titles or headers.`
-    : `Escribe una breve conclusión llamando al espectador a suscribirse y compartir el video.
-
-Pautas de estilo:
-- Resume la lección principal o mensaje de la historia
-- Crea conexión emocional
-- Llamada a la acción: suscribirse, compartir, comentar
-- Pregunta qué les impactó más de la historia
-- Mantenlo conciso y atractivo
-
-Título de la Historia: ${input.title}
-
-Escribe SOLO el texto de conclusión (alrededor de 1500-2000 caracteres). No agregues títulos ni encabezados.`;
-
-  return instructions;
+Título: ${input.title}`;
 }
 
 // ============================================================================
-// ETAPA 5: GERAR TAKES (DIVISÃO EM CENAS VISUAIS)
+// ETAPA 5: TRILHA SONORA
 // ============================================================================
 
-export function buildTakesPrompt(
-  textoNarrado: string,
-  personagens: string,
-  language?: 'pt' | 'en' | 'es'
-): string {
+export function buildTrilhaPrompt(roteiro: string, input: ScriptInput): string {
+  return `Com base neste roteiro, crie sugestões de trilha sonora e direção musical.
+
+Roteiro:
+${roteiro.substring(0, 5000)}...
+
+Título: ${input.title}
+
+Formato:
+- Momentos musicais (quando usar música épica, dramática, suave, etc)
+- Sugestões de estilo musical
+- Indicações de intensidade para cada parte`;
+}
+
+// ============================================================================
+// ETAPA 6: PERSONAGENS
+// ============================================================================
+
+export function buildPersonagensPrompt(roteiro: string, input: ScriptInput): string {
+  return `Com base neste roteiro, crie descrições detalhadas dos personagens principais para geração de imagens com IA.
+
+Roteiro:
+${roteiro.substring(0, 5000)}...
+
+Para cada personagem, descreva:
+- Aparência física (idade, altura, cabelo, olhos, etc)
+- Vestimentas da época
+- Características marcantes
+- Expressões faciais típicas
+
+Use linguagem clara para que uma IA consiga gerar imagens precisas.`;
+}
+
+// ============================================================================
+// ETAPA 7: TÍTULO E DESCRIÇÃO
+// ============================================================================
+
+export function buildTituloPrompt(roteiro: string, input: ScriptInput): string {
+  return `Com base neste roteiro, crie:
+
+1. Título para YouTube (máx 100 caracteres, chamativo)
+2. Descrição completa para YouTube (300-500 palavras)
+3. 10 palavras-chave/tags relevantes
+
+Roteiro:
+${roteiro.substring(0, 3000)}...
+
+Título original: ${input.title}`;
+}
+
+// ============================================================================
+// ETAPA 8: TAKES (Cenas Visuais)
+// ============================================================================
+
+export function buildTakesPrompt(textoNarrado: string, personagens: string, language?: 'pt' | 'en' | 'es'): string {
   const lang = language || 'pt';
 
-  const instructions = lang === 'pt'
-    ? `Você vai criar um arquivo TAKES dividindo o texto narrado em cenas visuais de 60-90 caracteres cada.
+  return `Divida este texto narrado em TAKES (cenas visuais) para geração de imagens/vídeos.
 
-OBJETIVO: Criar um guia visual para geração de imagens/vídeos com IA, garantindo consistência de personagens.
+Para cada TAKE, descreva:
+- O que mostrar visualmente
+- Personagens em cena
+- Cenário
+- Ação acontecendo
 
-ESTRUTURA DO ARQUIVO:
+Personagens disponíveis:
+${personagens.substring(0, 2000)}
 
-========================================
-BANCO DE PERSONAGENS (CHARACTER BANK)
-========================================
+Texto Narrado:
+${textoNarrado.substring(0, 10000)}...
 
-[Extraia TODOS os personagens do arquivo "personagens" abaixo e liste aqui]
-
-PERSONAGEM 1: [Nome]
-Visual Anchor: [Descrição visual completa copiada do arquivo personagens]
-
-PERSONAGEM 2: [Nome]
-Visual Anchor: [Descrição visual completa copiada do arquivo personagens]
-
-[... todos os personagens ...]
-
-========================================
-TAKES (60-90 caracteres cada)
-========================================
-
-TAKE 1 (X caracteres)
-Cena: [Descrição visual da cena em 60-90 caracteres]
-Personagens presentes: [Lista de personagens que aparecem]
-└─ CHARACTER ANCHOR: [Nome: descrição visual do banco]
-
-TAKE 2 (X caracteres)
-Cena: [Descrição visual da cena em 60-90 caracteres]
-Personagens presentes: [Lista de personagens que aparecem]
-└─ CHARACTER ANCHOR: [Nome: descrição visual do banco]
-
-[... continuar para todas as cenas ...]
-
----
-
-REGRAS CRÍTICAS:
-
-1. BANCO DE PERSONAGENS:
-   - Copie EXATAMENTE as descrições do arquivo "personagens" fornecido
-   - Não invente ou modifique descrições
-   - Liste TODOS os personagens mencionados
-
-2. DIVISÃO EM TAKES:
-   - Cada take = 1 cena visual distinta
-   - Cada descrição deve ter entre 60-90 CARACTERES
-   - Conte os caracteres e inclua o número entre parênteses
-   - Foque em ELEMENTOS VISUAIS (o que se vê, não o que se ouve)
-
-3. CHARACTER ANCHOR:
-   - Para CADA take, identifique quais personagens aparecem
-   - Copie a descrição visual do banco para garantir consistência
-   - Se não houver personagens, escreva "Nenhum personagem humano"
-
-4. NARRATIVA VISUAL:
-   - Pense em ângulos de câmera (close, plano geral, etc)
-   - Descreva cenário, iluminação, ações
-   - Seja específico e direto
-
-EXEMPLO DE TAKE BEM FEITO:
-
-TAKE 15 (78 caracteres)
-Cena: Close no rosto de Moisés olhando para sarça ardente, expressão de espanto
-Personagens presentes: Moisés
-└─ CHARACTER ANCHOR: Moisés: homem de 80 anos, barba grisalha longa, túnica de pastor desgastada, pele bronzeada pelo sol do deserto, olhos profundos e cansados, cajado de madeira na mão
-
----
-
-ARQUIVOS FORNECIDOS:
-
-TEXTO NARRADO:
-${textoNarrado}
-
-PERSONAGENS:
-${personagens}
-
----
-
-Agora crie o arquivo TAKES completo seguindo EXATAMENTE o formato especificado acima.`
-    : lang === 'en'
-    ? `You will create a TAKES file dividing the narrated text into visual scenes of 60-90 characters each.
-
-GOAL: Create a visual guide for AI image/video generation, ensuring character consistency.
-
-FILE STRUCTURE:
-
-========================================
-CHARACTER BANK
-========================================
-
-[Extract ALL characters from the "characters" file below and list them here]
-
-CHARACTER 1: [Name]
-Visual Anchor: [Complete visual description copied from characters file]
-
-CHARACTER 2: [Name]
-Visual Anchor: [Complete visual description copied from characters file]
-
-[... all characters ...]
-
-========================================
-TAKES (60-90 characters each)
-========================================
-
-TAKE 1 (X characters)
-Scene: [Visual scene description in 60-90 characters]
-Characters present: [List of characters appearing]
-└─ CHARACTER ANCHOR: [Name: visual description from bank]
-
-TAKE 2 (X characters)
-Scene: [Visual scene description in 60-90 characters]
-Characters present: [List of characters appearing]
-└─ CHARACTER ANCHOR: [Name: visual description from bank]
-
-[... continue for all scenes ...]
-
----
-
-CRITICAL RULES:
-
-1. CHARACTER BANK:
-   - Copy EXACTLY the descriptions from the provided "characters" file
-   - Don't invent or modify descriptions
-   - List ALL mentioned characters
-
-2. TAKES DIVISION:
-   - Each take = 1 distinct visual scene
-   - Each description must be 60-90 CHARACTERS
-   - Count characters and include number in parentheses
-   - Focus on VISUAL ELEMENTS (what is seen, not heard)
-
-3. CHARACTER ANCHOR:
-   - For EACH take, identify which characters appear
-   - Copy visual description from bank to ensure consistency
-   - If no characters, write "No human characters"
-
-4. VISUAL NARRATIVE:
-   - Think in camera angles (close-up, wide shot, etc)
-   - Describe setting, lighting, actions
-   - Be specific and direct
-
----
-
-PROVIDED FILES:
-
-NARRATED TEXT:
-${textoNarrado}
-
-CHARACTERS:
-${personagens}
-
----
-
-Now create the complete TAKES file following EXACTLY the format specified above.`
-    : `Vas a crear un archivo TAKES dividiendo el texto narrado en escenas visuales de 60-90 caracteres cada una.
-
-OBJETIVO: Crear una guía visual para generación de imágenes/videos con IA, garantizando consistencia de personajes.
-
-[Similar structure in Spanish...]`;
-
-  return instructions;
+Formato:
+TAKE 1: [Descrição visual]
+TAKE 2: [Descrição visual]
+...`;
 }

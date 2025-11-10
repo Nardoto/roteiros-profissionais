@@ -175,11 +175,31 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange, disabled }
         required
         disabled={disabled}
       >
-        {availableProviders.map((provider, index) => (
-          <option key={index} value={JSON.stringify(provider)}>
-            {provider.label} {isFreeProvider(provider.provider) ? '(Gratuito)' : '(Pago)'}
-          </option>
-        ))}
+        {/* APIs Gratuitas */}
+        {availableProviders.filter(p => isFreeProvider(p.provider)).length > 0 && (
+          <optgroup label="🆓 APIs Gratuitas">
+            {availableProviders
+              .filter(p => isFreeProvider(p.provider))
+              .map((provider, index) => (
+                <option key={`free-${index}`} value={JSON.stringify(provider)}>
+                  {provider.label}
+                </option>
+              ))}
+          </optgroup>
+        )}
+
+        {/* APIs Pagas */}
+        {availableProviders.filter(p => !isFreeProvider(p.provider)).length > 0 && (
+          <optgroup label="💰 APIs Pagas">
+            {availableProviders
+              .filter(p => !isFreeProvider(p.provider))
+              .map((provider, index) => (
+                <option key={`paid-${index}`} value={JSON.stringify(provider)}>
+                  {provider.label}
+                </option>
+              ))}
+          </optgroup>
+        )}
       </select>
 
       <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -198,7 +218,7 @@ export default function ApiSelector({ apiKeys, selectedApi, onChange, disabled }
             <span> OpenAI GPT-4: ~US$ 0.50/roteiro.</span>
           )}
           {selectedApi?.provider === 'anthropic' && (
-            <span> Anthropic Claude: ~US$ 0.40/roteiro.</span>
+            <span> Claude 4: Opus 4.1 para docs pesados (~US$ 0.80/roteiro) + Sonnet 4.5 para leves (~US$ 0.20/roteiro).</span>
           )}
         </div>
       </div>

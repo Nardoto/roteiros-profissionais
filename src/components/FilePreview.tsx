@@ -22,9 +22,12 @@ export default function FilePreview({ scripts }: FilePreviewProps) {
   ];
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(scripts[activeTab]);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const content = scripts[activeTab];
+    if (content) {
+      navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

@@ -15,6 +15,8 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
   const contentRef = useRef<HTMLDivElement>(null);
   const [testingKeys, setTestingKeys] = useState<Record<string, boolean>>({});
   const [keyStatus, setKeyStatus] = useState<Record<string, 'valid' | 'invalid' | null>>({});
+  const [isFreeApisExpanded, setIsFreeApisExpanded] = useState(false); // APIs Gratuitas recolhidas por padrão
+  const [isPaidApisExpanded, setIsPaidApisExpanded] = useState(false); // APIs Pagas recolhidas por padrão
 
   // Carregar API keys do localStorage ao montar
   useEffect(() => {
@@ -133,9 +135,44 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
     }
   };
 
+  // Testar uma API key do Claude
+  const testClaudeKey = async (key: string) => {
+    if (!key.trim()) return;
+
+    setTestingKeys(prev => ({ ...prev, 'claude': true }));
+    setKeyStatus(prev => ({ ...prev, 'claude': null }));
+
+    try {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({
+        apiKey: key,
+        dangerouslyAllowBrowser: true
+      });
+
+      // Teste simples: gerar "OK" usando Claude Sonnet 4.5
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Say OK' }]
+      });
+
+      const textContent = message.content.find(block => block.type === 'text');
+      if (textContent && textContent.type === 'text' && textContent.text) {
+        setKeyStatus(prev => ({ ...prev, 'claude': 'valid' }));
+      } else {
+        setKeyStatus(prev => ({ ...prev, 'claude': 'invalid' }));
+      }
+    } catch (error: any) {
+      console.error('Erro ao testar API do Claude:', error);
+      setKeyStatus(prev => ({ ...prev, 'claude': 'invalid' }));
+    } finally {
+      setTestingKeys(prev => ({ ...prev, 'claude': false }));
+    }
+  };
+
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden scroll-smooth">
-      {/* Header - Clicável para expandir/recolher */}
+      {/* Header - Clicavel para expandir/recolher */}
       <button
         type="button"
         onClick={(e) => {
@@ -185,12 +222,25 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
 
           {/* ===== SEÇÃO: GRATUITOS ===== */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-green-200 dark:border-green-800">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <h4 className="font-semibold text-green-700 dark:text-green-400">APIs Gratuitas</h4>
-            </div>
+            {/* Header clicável para APIs Gratuitas */}
+            <button
+              type="button"
+              onClick={() => setIsFreeApisExpanded(!isFreeApisExpanded)}
+              className="w-full flex items-center justify-between gap-2 pb-2 border-b border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <h4 className="font-semibold text-green-700 dark:text-green-400">🆓 APIs Gratuitas</h4>
+              </div>
+              <ChevronDown
+                size={18}
+                className={`text-green-600 dark:text-green-400 transition-transform duration-200 ${isFreeApisExpanded ? 'rotate-180' : ''}`}
+              />
+            </button>
 
-            {/* Google Gemini */}
+            {/* Conteúdo colapsável */}
+            <div className={`transition-all duration-300 ease-in-out ${isFreeApisExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden space-y-4`}>
+              {/* Google Gemini */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 🔷 Google Gemini (múltiplas contas)
@@ -401,18 +451,32 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
                 Gratuito • Vários modelos • <a href="https://huggingface.co/settings/tokens" target="_blank" className="text-primary underline">Obter API</a>
               </p>
             </div>
+            </div> {/* Fecha div do conteúdo colapsável de APIs Gratuitas */}
           </div>
 
           <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
 
           {/* ===== SEÇÃO: PAGOS ===== */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-yellow-200 dark:border-yellow-800">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <h4 className="font-semibold text-yellow-700 dark:text-yellow-400">APIs Pagas</h4>
-            </div>
+            {/* Header clicável para APIs Pagas */}
+            <button
+              type="button"
+              onClick={() => setIsPaidApisExpanded(!isPaidApisExpanded)}
+              className="w-full flex items-center justify-between gap-2 pb-2 border-b border-yellow-200 dark:border-yellow-800 hover:border-yellow-300 dark:hover:border-yellow-700 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <h4 className="font-semibold text-yellow-700 dark:text-yellow-400">💰 APIs Pagas</h4>
+              </div>
+              <ChevronDown
+                size={18}
+                className={`text-yellow-600 dark:text-yellow-400 transition-transform duration-200 ${isPaidApisExpanded ? 'rotate-180' : ''}`}
+              />
+            </button>
 
-            {/* OpenAI */}
+            {/* Conteúdo colapsável */}
+            <div className={`transition-all duration-300 ease-in-out ${isPaidApisExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden space-y-4`}>
+              {/* OpenAI */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 🟢 OpenAI / GPT
@@ -434,15 +498,34 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 🟣 Anthropic / Claude
               </label>
-              <input
-                type={showKeys ? 'text' : 'password'}
-                value={apiKeys.anthropic || ''}
-                onChange={(e) => updateSingleKey('anthropic', e.target.value)}
-                placeholder="sk-ant-..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white font-mono text-sm"
-              />
+              <div className="flex gap-2">
+                <input
+                  type={showKeys ? 'text' : 'password'}
+                  value={apiKeys.anthropic || ''}
+                  onChange={(e) => updateSingleKey('anthropic', e.target.value)}
+                  placeholder="sk-ant-..."
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white font-mono text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => testClaudeKey(apiKeys.anthropic || '')}
+                  disabled={!apiKeys.anthropic?.trim() || testingKeys['claude']}
+                  className="px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title="Testar API Key"
+                >
+                  {testingKeys['claude'] ? (
+                    <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                  ) : keyStatus['claude'] === 'valid' ? (
+                    <CheckCircle size={18} className="text-green-600" />
+                  ) : keyStatus['claude'] === 'invalid' ? (
+                    <AlertCircle size={18} className="text-red-600" />
+                  ) : (
+                    'Test'
+                  )}
+                </button>
+              </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Pago • Claude 3 Opus, Sonnet, Haiku • <a href="https://console.anthropic.com/" target="_blank" className="text-primary underline">Obter API</a>
+                Pago • Claude 4: Opus 4.1, Sonnet 4.5, Haiku 4.5 • <a href="https://console.anthropic.com/" target="_blank" className="text-primary underline">Obter API</a>
               </p>
             </div>
 
@@ -496,6 +579,7 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
                 Pago • Perplexity Sonar • <a href="https://www.perplexity.ai/settings/api" target="_blank" className="text-primary underline">Obter API</a>
               </p>
             </div>
+            </div> {/* Fecha div do conteúdo colapsável de APIs Pagas */}
           </div>
 
           {/* Info Box */}
