@@ -171,13 +171,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-950">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <MessageSquare size={32} className="text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <MessageSquare size={32} className="text-gray-900 dark:text-gray-100" />
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
               Gerador Conversacional
             </h1>
           </div>
@@ -189,9 +189,9 @@ export default function Home() {
         {/* Main Grid */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Coluna Esquerda: Input Form */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <FileText className="text-primary" size={24} />
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+              <FileText className="text-gray-700 dark:text-gray-300" size={24} />
               Configuração
             </h2>
             <ConversationalInputForm onSubmit={handleGenerate} isGenerating={isGenerating} />
@@ -201,7 +201,7 @@ export default function Home() {
           <div className="space-y-6">
             {/* Progress */}
             {(isGenerating || completedConversation || isCancelled) && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-800">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -214,11 +214,11 @@ export default function Home() {
                       </span>
                     )}
                   </div>
-                  <span className="text-sm font-bold text-primary">{Math.round(progress)}%</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{Math.round(progress)}%</span>
                 </div>
                 <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300"
+                    className="h-full bg-gray-900 dark:bg-gray-100 transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -245,7 +245,7 @@ export default function Home() {
             )}
 
             {/* Conversa */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800">
               <ConversationView
                 messages={messages}
                 currentStep={currentStep}
@@ -255,9 +255,9 @@ export default function Home() {
 
             {/* Downloads */}
             {completedConversation && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-800">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Download className="text-green-600" size={24} />
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <Download className="text-gray-700 dark:text-gray-300" size={24} />
                   Arquivos Gerados
                 </h2>
 
@@ -268,7 +268,7 @@ export default function Home() {
                       const fullScript = completedConversation.generatedFiles.hook || '';
                       downloadFile('01_Roteiro_Completo.txt', fullScript);
                     }}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                    className="w-full px-4 py-3 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 rounded-lg transition-all flex items-center justify-between font-bold"
                   >
                     <span>📝 Roteiro Completo (TTS-ready)</span>
                     <Download size={18} />
@@ -283,7 +283,7 @@ export default function Home() {
                           completedConversation.generatedFiles.estrutura!
                         )
                       }
-                      className="w-full px-4 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all flex items-center justify-between"
+                      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-all flex items-center justify-between"
                     >
                       <span className="font-medium">📋 Estrutura (Referência)</span>
                       <Download size={18} />
@@ -296,7 +296,7 @@ export default function Home() {
                       onClick={() =>
                         downloadFile('04_Personagens.txt', completedConversation.generatedFiles.personagens!)
                       }
-                      className="w-full px-4 py-3 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all flex items-center justify-between"
+                      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-all flex items-center justify-between"
                     >
                       <span className="font-medium">👥 Personagens</span>
                       <Download size={18} />
@@ -309,7 +309,7 @@ export default function Home() {
                       onClick={() =>
                         downloadFile('05_Trilha_Sonora.txt', completedConversation.generatedFiles.trilha!)
                       }
-                      className="w-full px-4 py-3 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-lg hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-all flex items-center justify-between"
+                      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-all flex items-center justify-between"
                     >
                       <span className="font-medium">🎵 Trilha Sonora</span>
                       <Download size={18} />
@@ -322,7 +322,7 @@ export default function Home() {
                       onClick={() =>
                         downloadFile('06_Takes_Divisao_Cenas.txt', completedConversation.generatedFiles.takes!)
                       }
-                      className="w-full px-4 py-3 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-lg hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-all flex items-center justify-between"
+                      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-all flex items-center justify-between"
                     >
                       <span className="font-medium">🎬 Takes/Divisão</span>
                       <Download size={18} />
@@ -371,7 +371,7 @@ export default function Home() {
                       const jsonString = JSON.stringify(exportData, null, 2);
                       downloadFile(`Roteiro_${completedConversation.id}_Export.json`, jsonString);
                     }}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                    className="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-all flex items-center justify-between font-bold"
                   >
                     <span>📦 Baixar Tudo (JSON)</span>
                     <Download size={18} />
@@ -465,7 +465,7 @@ export default function Home() {
                       const fullPackage = sections.join('\n');
                       downloadFile(`Roteiro_Completo_${completedConversation.id}_Pacote.txt`, fullPackage);
                     }}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
+                    className="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-all flex items-center justify-between font-bold"
                   >
                     <span>📄 Baixar Tudo (TXT Formatado)</span>
                     <Download size={18} />
@@ -473,11 +473,11 @@ export default function Home() {
                 </div>
 
                 {/* Exportar Prompts como Template */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border-2 border-indigo-200 dark:border-indigo-800">
-                  <h3 className="font-semibold mb-2 text-sm text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+                  <h3 className="font-semibold mb-2 text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     ⚙️ Criar Template Customizado
                   </h3>
-                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-3">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                     Exporte os prompts usados nesta geração para criar seu próprio template de roteiro
                   </p>
                   <button
@@ -544,7 +544,7 @@ export default function Home() {
 
                       downloadFile('TEMPLATE_Customizado.md', templateContent);
                     }}
-                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
+                    className="w-full px-4 py-3 bg-gray-600 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
                   >
                     <Download size={18} />
                     <span>💾 Exportar Prompts (Template)</span>
