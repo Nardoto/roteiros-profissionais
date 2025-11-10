@@ -265,12 +265,7 @@ export default function Home() {
                   {/* Roteiro Completo (PRINCIPAL - TTS-ready) */}
                   <button
                     onClick={() => {
-                      const fullScript = [
-                        completedConversation.generatedFiles.hook || '',
-                        ...(completedConversation.generatedFiles.topicos || []),
-                      ]
-                        .filter((s) => s.trim())
-                        .join('\n\n');
+                      const fullScript = completedConversation.generatedFiles.hook || '';
                       downloadFile('01_Roteiro_Completo.txt', fullScript);
                     }}
                     className="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-xl transition-all flex items-center justify-between font-bold"
@@ -294,18 +289,6 @@ export default function Home() {
                       <Download size={18} />
                     </button>
                   )}
-
-                  {/* Tópicos Individuais */}
-                  {completedConversation.generatedFiles.topicos?.map((topico, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => downloadFile(`03_Topico_${idx + 1}.txt`, topico)}
-                      className="w-full px-4 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-all flex items-center justify-between"
-                    >
-                      <span className="font-medium">📖 Tópico {idx + 1}</span>
-                      <Download size={18} />
-                    </button>
-                  ))}
 
                   {/* Personagens */}
                   {completedConversation.generatedFiles.personagens && (

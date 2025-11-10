@@ -392,37 +392,69 @@ export async function POST(request: NextRequest) {
           currentStepIndex++;
         }
 
-        // ========== CONSTRUIR ARQUIVOS DE OUTPUT ==========
+        // ========== CONSTRUIR ARQUIVOS DE OUTPUT (AUTO-DETECÇÃO) ==========
         console.log('\n📦 Construindo arquivos de output...');
 
         const generatedFiles: any = {};
 
-        // Arquivo primary
+        // 1. ROTEIRO COMPLETO (SEMPRE GERA) - Junta HOOK + todos os TOPICO_X
         try {
-          const primaryContent = buildOutput(template.outputs.primary, context);
-          if (primaryContent && primaryContent.trim()) {
-            generatedFiles[template.outputs.primary.id] = primaryContent;
-            console.log(`✅ ${template.outputs.primary.filename}: ${primaryContent.length} chars`);
-          } else {
-            console.warn(`⚠️ Arquivo primary "${template.outputs.primary.filename}" está vazio`);
+          const roteiroParts: string[] = [];
+
+          // Adiciona HOOK se existir
+          if (context.aiResponses['HOOK']) {
+            roteiroParts.push(context.aiResponses['HOOK']);
           }
-        } catch (outputError: any) {
-          console.error(`❌ Erro ao construir arquivo primary:`, outputError.message);
+
+          // Detecta e adiciona todos os TOPICO_X em ordem
+          const topicoKeys = Object.keys(context.aiResponses)
+            .filter(k => k.match(/^(TOPICO|CURIOSIDADE|ATO|CENA)_\d+$/))
+            .sort((a, b) => {
+              const numA = parseInt(a.match(/\d+$/)?.[0] || '0');
+              const numB = parseInt(b.match(/\d+$/)?.[0] || '0');
+              return numA - numB;
+            });
+
+          topicoKeys.forEach(key => {
+            if (context.aiResponses[key]) {
+              roteiroParts.push(context.aiResponses[key]);
+            }
+          });
+
+          const roteiroCompleto = roteiroParts.filter(x => x.trim()).join('\n\n');
+
+          if (roteiroCompleto.trim()) {
+            generatedFiles['roteiro'] = roteiroCompleto;
+            console.log(`✅ 01_Roteiro_Completo.txt: ${roteiroCompleto.length} chars`);
+          } else {
+            console.warn(`⚠️ Roteiro completo está vazio`);
+          }
+        } catch (error: any) {
+          console.error(`❌ Erro ao construir roteiro completo:`, error.message);
         }
 
-        // Arquivos opcionais
-        for (const optionalOutput of template.outputs.optional) {
-          try {
-            const content = buildOutput(optionalOutput, context);
-            if (content && content.trim()) {
-              generatedFiles[optionalOutput.id] = content;
-              console.log(`✅ ${optionalOutput.filename}: ${content.length} chars`);
-            } else {
-              console.log(`⏭️ Arquivo opcional "${optionalOutput.filename}" pulado (vazio ou variável não encontrada)`);
-            }
-          } catch (outputError: any) {
-            console.error(`❌ Erro ao construir arquivo "${optionalOutput.filename}":`, outputError.message);
-          }
+        // 2. ESTRUTURA (Opcional)
+        if (context.aiResponses['ESTRUTURA']) {
+          generatedFiles['estrutura'] = context.aiResponses['ESTRUTURA'];
+          console.log(`✅ 00_Estrutura.txt: ${context.aiResponses['ESTRUTURA'].length} chars`);
+        }
+
+        // 3. PERSONAGENS (Opcional)
+        if (context.aiResponses['PERSONAGENS']) {
+          generatedFiles['personagens'] = context.aiResponses['PERSONAGENS'];
+          console.log(`✅ 02_Personagens.txt: ${context.aiResponses['PERSONAGENS'].length} chars`);
+        }
+
+        // 4. TRILHA SONORA (Opcional)
+        if (context.aiResponses['TRILHA']) {
+          generatedFiles['trilha'] = context.aiResponses['TRILHA'];
+          console.log(`✅ 03_Trilha_Sonora.txt: ${context.aiResponses['TRILHA'].length} chars`);
+        }
+
+        // 5. TAKES (Opcional)
+        if (context.aiResponses['TAKES']) {
+          generatedFiles['takes'] = context.aiResponses['TAKES'];
+          console.log(`✅ 04_Takes.txt: ${context.aiResponses['TAKES'].length} chars`);
         }
 
         // ========== CONCLUÍDO ==========
@@ -449,11 +481,8 @@ export async function POST(request: NextRequest) {
           status: 'completed' as const,
           generatedFiles: {
             estrutura: generatedFiles.estrutura || '',
-            hook: '', // Hook agora está integrado no roteiro completo
-            topicos: Object.keys(context.variables)
-              .filter((k) => k.match(/^(TOPICO|CURIOSIDADE|ATO|CENA)_\d+$/))
-              .map((k) => context.variables[k])
-              .filter((v) => v),
+            hook: generatedFiles.roteiro || '', // Roteiro completo
+            topicos: [], // Não precisa mais, tudo está no roteiro completo
             personagens: generatedFiles.personagens || '',
             trilha: generatedFiles.trilha || '',
             takes: generatedFiles.takes || '',
