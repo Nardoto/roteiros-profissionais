@@ -188,11 +188,11 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
             }, 100);
           }
         }}
-        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-t-lg"
       >
         <div className="flex items-center gap-2">
-          <Key className="text-primary" size={20} />
-          <h3 className="text-lg font-semibold">Configuração de API Keys</h3>
+          <Key className="text-gray-700 dark:text-gray-300" size={18} />
+          <h3 className="text-base font-semibold">Configuração de API Keys</h3>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             ({countConfigured()} provider{countConfigured() !== 1 ? 's' : ''} configurado{countConfigured() !== 1 ? 's' : ''})
           </span>
@@ -208,7 +208,7 @@ export default function ApiKeyManager({ apiKeys, onChange }: ApiKeyManagerProps)
         ref={contentRef}
         className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
       >
-        <div className="p-6 space-y-6">
+        <div className="p-3 space-y-4">
           {/* Botão de mostrar/ocultar keys */}
           <div className="flex justify-end">
             <button

@@ -626,31 +626,31 @@ export default function ConversationalInputForm({ onSubmit, isGenerating }: Conv
 
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'haiku', name: 'Haiku 4.5', cost: '$0.30', color: 'green' },
-              { id: 'sonnet', name: 'Sonnet 4.5', cost: '$0.50', color: 'blue' },
-              { id: 'opus', name: 'Opus 4.1', cost: '$1.00', color: 'purple' },
+              { id: 'haiku', name: 'Haiku 4.5', cost: '$0.30' },
+              { id: 'sonnet', name: 'Sonnet 4.5', cost: '$0.50' },
+              { id: 'opus', name: 'Opus 4.1', cost: '$1.00' },
             ].map((model) => (
               <button
                 key={model.id}
                 type="button"
                 onClick={() => setClaudeModel(model.id as any)}
-                className={`px-3 py-3 text-xs font-medium rounded-lg transition-all ${
+                className={`px-3 py-2 text-xs font-medium rounded-lg transition-all border ${
                   claudeModel === model.id
-                    ? `bg-${model.color}-500 text-white shadow-lg`
-                    : `bg-${model.color}-100 dark:bg-${model.color}-900/30 text-${model.color}-700 dark:text-${model.color}-300 hover:bg-${model.color}-200`
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
                 disabled={isGenerating}
               >
                 <div className="font-bold">{model.name}</div>
-                <div className="text-xs mt-1">{model.cost}</div>
+                <div className="text-[10px] mt-0.5 opacity-70">{model.cost}</div>
               </button>
             ))}
           </div>
 
           {/* Aviso Haiku */}
           {claudeModel === 'haiku' && (
-            <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-xs text-yellow-800 dark:text-yellow-300">
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
+              <p className="text-xs text-gray-700 dark:text-gray-300">
                 ⚡ <strong>Haiku:</strong> Mais rápido e barato, mas pode demorar 40-60s por tópico em roteiros longos.
                 O sistema reduzirá automaticamente o tamanho para 60% do solicitado.
               </p>
