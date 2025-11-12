@@ -170,59 +170,72 @@ export async function POST(request: NextRequest) {
           // Se o step é "topico", vamos gerar N vezes (um para cada tópico)
           if (step.id === 'topico' || step.id === 'curiosidade' || step.id === 'ato') {
             // Extrair cada tópico da estrutura gerada
-            // Tentar múltiplos padrões para detectar tópicos
             let topicos: string[] = [];
             let usedPattern = '';
 
-            // Padrão 1: "TÓPICO 1:", "CURIOSIDADE 1:", "ATO 1:" (com dois-pontos)
-            const pattern1 = /(T[oó]pico?|CURIOSIDADE|Curiosidade|ATO|Ato) \d+:/i;
-            let topicosRaw = estruturaGerada.split(pattern1);
-            // Filtrar apenas elementos com conteúdo (o split gera arrays com os grupos de captura)
-            topicos = topicosRaw.filter((t, idx) => idx % 2 === 0 && t.trim().length > 0);
+            console.log(`\n🔍 ESTRUTURA GERADA (primeiros 500 chars):`);
+            console.log(estruturaGerada.substring(0, 500));
 
-            // Se o split com grupos de captura não funcionou bem, tentar sem grupos
-            if (topicos.length < input.numTopics) {
-              topicosRaw = estruturaGerada.split(/(?:T[oó]pico?|CURIOSIDADE|Curiosidade|ATO|Ato) \d+:/i);
-              topicos = topicosRaw.filter(t => t.trim().length > 0);
+            // Padrão 1: "TÓPICO 1:", "CURIOSIDADE 1:", "ATO 1:" (com dois-pontos)
+            const pattern1 = /(?:T[oó]pico?|CURIOSIDADE|Curiosidade|ATO|Ato) \d+:/gi;
+            const matches = estruturaGerada.match(pattern1);
+
+            if (matches && matches.length >= input.numTopics) {
+              // Dividir pelos marcadores encontrados
+              const parts = estruturaGerada.split(pattern1);
+              // Remover o primeiro elemento (texto antes do primeiro tópico)
+              parts.shift();
+              topicos = parts.filter(t => t.trim().length > 0);
+              usedPattern = 'Padrão 1: "TÓPICO/CURIOSIDADE/ATO N:"';
+
+              console.log(`✅ Encontrados ${matches.length} marcadores: ${matches.join(', ')}`);
             }
 
-            if (topicos.length >= input.numTopics) {
-              usedPattern = 'Padrão 1: "TÓPICO/CURIOSIDADE/ATO N:"';
-            } else {
+            if (topicos.length < input.numTopics) {
               // Padrão 2: "TÓPICO 1 -", "CURIOSIDADE 1 -" (com hífen)
-              const pattern2 = /(?:T[oó]pico?|CURIOSIDADE|Curiosidade|ATO|Ato) \d+ -/i;
-              topicosRaw = estruturaGerada.split(pattern2);
-              topicos = topicosRaw.filter(t => t.trim().length > 0);
+              const pattern2 = /(?:T[oó]pico?|CURIOSIDADE|Curiosidade|ATO|Ato) \d+ -/gi;
+              const matches2 = estruturaGerada.match(pattern2);
 
-              if (topicos.length >= input.numTopics) {
+              if (matches2 && matches2.length >= input.numTopics) {
+                const parts = estruturaGerada.split(pattern2);
+                parts.shift();
+                topicos = parts.filter((t: string) => t.trim().length > 0);
                 usedPattern = 'Padrão 2: "TÓPICO N -"';
-              } else {
-                // Padrão 3: Numeração simples "1.", "2.", "3." no início de linha
-                const pattern3 = /^(\d+)\./gm;
-                const matches = estruturaGerada.match(pattern3);
-
-                if (matches && matches.length >= input.numTopics) {
-                  // Dividir por número + ponto
-                  topicosRaw = estruturaGerada.split(/^\d+\./gm);
-                  topicos = topicosRaw.filter(t => t.trim().length > 0);
-                  usedPattern = 'Padrão 3: "N."';
-                } else {
-                  // Padrão 4: "## Tópico" ou "# Tópico" (formato Markdown)
-                  const pattern4 = /#{1,3}\s*T[oó]pico?/i;
-                  topicosRaw = estruturaGerada.split(pattern4);
-                  topicos = topicosRaw.filter(t => t.trim().length > 0);
-
-                  if (topicos.length >= input.numTopics) {
-                    usedPattern = 'Padrão 4: Markdown "# TÓPICO"';
-                  } else {
-                    // Fallback: dividir por quebras de linha duplas (parágrafos)
-                    console.warn('⚠️ Nenhum padrão de tópico detectado, usando fallback...');
-                    topicosRaw = estruturaGerada.split(/\n\n+/);
-                    topicos = topicosRaw.filter(t => t.trim().length > 100); // Apenas blocos grandes
-                    usedPattern = 'Fallback: Parágrafos grandes';
-                  }
-                }
               }
+            }
+
+            if (topicos.length < input.numTopics) {
+              // Padrão 3: Numeração simples "1.", "2.", "3." no início de linha
+              const pattern3 = /^(\d+)\./gm;
+              const matches3 = estruturaGerada.match(pattern3);
+
+              if (matches3 && matches3.length >= input.numTopics) {
+                const parts = estruturaGerada.split(/^\d+\./gm);
+                parts.shift();
+                topicos = parts.filter((t: string) => t.trim().length > 0);
+                usedPattern = 'Padrão 3: "N."';
+              }
+            }
+
+            if (topicos.length < input.numTopics) {
+              // Padrão 4: "## Tópico" ou "# Tópico" (formato Markdown)
+              const pattern4 = /#{1,3}\s*(?:T[oó]pico?|CURIOSIDADE|ATO)/gi;
+              const matches4 = estruturaGerada.match(pattern4);
+
+              if (matches4 && matches4.length >= input.numTopics) {
+                const parts = estruturaGerada.split(pattern4);
+                parts.shift();
+                topicos = parts.filter((t: string) => t.trim().length > 0);
+                usedPattern = 'Padrão 4: Markdown "# TÓPICO"';
+              }
+            }
+
+            if (topicos.length < input.numTopics) {
+              // Fallback: dividir por quebras de linha duplas (parágrafos)
+              console.warn('⚠️ Nenhum padrão de tópico detectado, usando fallback...');
+              const parts = estruturaGerada.split(/\n\n+/);
+              topicos = parts.filter((t: string) => t.trim().length > 100);
+              usedPattern = 'Fallback: Parágrafos grandes';
             }
 
             console.log(`🔍 DEBUG - Estrutura split em ${topicos.length} tópicos usando: ${usedPattern}`);
