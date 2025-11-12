@@ -39,12 +39,21 @@ Sinopse: {{SINOPSE}}
 
 Escreva em {{IDIOMA_NOME}}. Os tópicos não devem conter introdução e nem conclusão, e devem ser bem divididos para que os espectadores não se sintam perdidos no vídeo. Cada tópico deve ter {{NUM_SUBTOPICOS}} subtópicos.
 
-Formate EXATAMENTE assim (numere os subtópicos como 1.1, 1.2 etc... e NÃO desenvolva os subtópicos, quero apenas seus títulos):
+⚠️ IMPORTANTE: Use EXATAMENTE o formato abaixo (com "TÓPICO" em maiúsculas e dois-pontos após o número):
 
 TÓPICO 1: [NOME DO TÓPICO]
 1.1 [Nome do subtópico]
 1.2 [Nome do subtópico]
-...`,
+...
+1.{{NUM_SUBTOPICOS}} [Nome do subtópico]
+
+TÓPICO 2: [NOME DO TÓPICO]
+2.1 [Nome do subtópico]
+...
+
+Numere os subtópicos como 1.1, 1.2 etc... e NÃO desenvolva os subtópicos, quero apenas seus títulos.
+
+REPITA: Você DEVE gerar EXATAMENTE {{NUM_TOPICOS}} tópicos usando o formato "TÓPICO 1:", "TÓPICO 2:", etc.`,
       usesContext: false,
       autoExecute: true,
       outputType: 'structure',
@@ -197,7 +206,7 @@ export const TEMPLATE_CURIOSIDADES: PromptTemplate = {
 Contexto: {{SINOPSE}}
 {{BASE_CONHECIMENTO}}
 
-Formate assim:
+⚠️ IMPORTANTE: Use EXATAMENTE o formato abaixo (com "CURIOSIDADE" em maiúsculas e dois-pontos após o número):
 
 CURIOSIDADE 1: [Título chamativo]
 1.1 [Subtópico]
@@ -205,7 +214,13 @@ CURIOSIDADE 1: [Título chamativo]
 1.3 [Subtópico]
 
 CURIOSIDADE 2: [Título chamativo]
-...`,
+2.1 [Subtópico]
+2.2 [Subtópico]
+2.3 [Subtópico]
+
+...
+
+REPITA: Você DEVE gerar EXATAMENTE {{NUM_TOPICOS}} curiosidades usando o formato "CURIOSIDADE 1:", "CURIOSIDADE 2:", etc.`,
       usesContext: false,
       autoExecute: true,
       outputType: 'structure',
